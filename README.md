@@ -146,6 +146,15 @@ A documentacao inclui:
 - Status codes esperados como `200`, `201`, `204`, `400`, `401`, `404` e `409`
 - Configuracao Bearer para colar o token JWT
 
+## Collections de requests
+
+A pasta `request-collections/` contem exemplos de requests da aplicacao para facilitar testes manuais em clients HTTP. Os arquivos foram gerados em formato compativel com Thunder Client, mas tambem servem como referencia para montar ou adaptar as chamadas em outros clients, como Postman, Insomnia ou Bruno.
+
+- Collection: `request-collections/oficina-mecanica-api-requests.collection.json`
+- Environment local: `request-collections/oficina-mecanica-local.environment.json`
+
+O environment usa `baseUrl=http://localhost:5240`, porta padrao do `dotnet run`. Para testar a API via Docker, altere `baseUrl` para `http://localhost:8080`. Depois de executar `POST /api/auth/login`, copie o `accessToken` retornado para a variavel `token` antes de chamar endpoints protegidos.
+
 ## Como rodar localmente
 
 ```bash

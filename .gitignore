@@ -63,6 +63,10 @@ docker-compose.override.yml
 .sonarqube/
 .scannerwork/
 
+# Keep shared API request collections versioned.
+!request-collections/
+!request-collections/**
+
 # OS files
 .DS_Store
 Thumbs.db
