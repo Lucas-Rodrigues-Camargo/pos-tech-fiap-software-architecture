@@ -1,0 +1,826 @@
+{
+  "client": "Thunder Client",
+  "collectionName": "Oficina Mecanica API",
+  "dateExported": "2026-05-03T00:00:00.000Z",
+  "version": "1.2",
+  "folders": [
+    {
+      "_id": "fld_auth",
+      "name": "Auth",
+      "containerId": "",
+      "created": "2026-05-03T00:00:00.000Z",
+      "sortNum": 10000
+    },
+    {
+      "_id": "fld_customers",
+      "name": "Customers",
+      "containerId": "",
+      "created": "2026-05-03T00:00:00.000Z",
+      "sortNum": 20000
+    },
+    {
+      "_id": "fld_vehicles",
+      "name": "Vehicles",
+      "containerId": "",
+      "created": "2026-05-03T00:00:00.000Z",
+      "sortNum": 30000
+    },
+    {
+      "_id": "fld_services",
+      "name": "Services",
+      "containerId": "",
+      "created": "2026-05-03T00:00:00.000Z",
+      "sortNum": 40000
+    },
+    {
+      "_id": "fld_parts",
+      "name": "Parts",
+      "containerId": "",
+      "created": "2026-05-03T00:00:00.000Z",
+      "sortNum": 50000
+    },
+    {
+      "_id": "fld_service_orders",
+      "name": "Service Orders",
+      "containerId": "",
+      "created": "2026-05-03T00:00:00.000Z",
+      "sortNum": 60000
+    }
+  ],
+  "requests": [
+    {
+      "_id": "req_auth_register",
+      "colId": "col_oficina_mecanica_api",
+      "containerId": "fld_auth",
+      "name": "Register",
+      "url": "{{baseUrl}}/api/auth/register",
+      "method": "POST",
+      "sortNum": 10000,
+      "created": "2026-05-03T00:00:00.000Z",
+      "modified": "2026-05-03T00:00:00.000Z",
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "params": [],
+      "body": {
+        "type": "json",
+        "raw": "{\n  \"username\": \"usuario.demo\",\n  \"email\": \"usuario.demo@example.com\",\n  \"password\": \"User@123456\",\n  \"isAdmin\": false\n}",
+        "form": []
+      },
+      "tests": []
+    },
+    {
+      "_id": "req_auth_login",
+      "colId": "col_oficina_mecanica_api",
+      "containerId": "fld_auth",
+      "name": "Login Admin",
+      "url": "{{baseUrl}}/api/auth/login",
+      "method": "POST",
+      "sortNum": 11000,
+      "created": "2026-05-03T00:00:00.000Z",
+      "modified": "2026-05-03T00:00:00.000Z",
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "params": [],
+      "body": {
+        "type": "json",
+        "raw": "{\n  \"username\": \"admin\",\n  \"password\": \"Admin@123\"\n}",
+        "form": []
+      },
+      "tests": []
+    },
+    {
+      "_id": "req_customers_get_all",
+      "colId": "col_oficina_mecanica_api",
+      "containerId": "fld_customers",
+      "name": "Get All Customers",
+      "url": "{{baseUrl}}/api/customers",
+      "method": "GET",
+      "sortNum": 20000,
+      "created": "2026-05-03T00:00:00.000Z",
+      "modified": "2026-05-03T00:00:00.000Z",
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{token}}"
+        }
+      ],
+      "params": [],
+      "tests": []
+    },
+    {
+      "_id": "req_customers_get_by_id",
+      "colId": "col_oficina_mecanica_api",
+      "containerId": "fld_customers",
+      "name": "Get Customer By Id",
+      "url": "{{baseUrl}}/api/customers/{{customerId}}",
+      "method": "GET",
+      "sortNum": 21000,
+      "created": "2026-05-03T00:00:00.000Z",
+      "modified": "2026-05-03T00:00:00.000Z",
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{token}}"
+        }
+      ],
+      "params": [],
+      "tests": []
+    },
+    {
+      "_id": "req_customers_create",
+      "colId": "col_oficina_mecanica_api",
+      "containerId": "fld_customers",
+      "name": "Create Customer",
+      "url": "{{baseUrl}}/api/customers",
+      "method": "POST",
+      "sortNum": 22000,
+      "created": "2026-05-03T00:00:00.000Z",
+      "modified": "2026-05-03T00:00:00.000Z",
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{token}}"
+        },
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "params": [],
+      "body": {
+        "type": "json",
+        "raw": "{\n  \"name\": \"Maria Oliveira\",\n  \"document\": \"{{customerDocument}}\",\n  \"phone\": \"11999999999\",\n  \"email\": \"maria.oliveira@example.com\"\n}",
+        "form": []
+      },
+      "tests": []
+    },
+    {
+      "_id": "req_customers_update",
+      "colId": "col_oficina_mecanica_api",
+      "containerId": "fld_customers",
+      "name": "Update Customer",
+      "url": "{{baseUrl}}/api/customers/{{customerId}}",
+      "method": "PUT",
+      "sortNum": 23000,
+      "created": "2026-05-03T00:00:00.000Z",
+      "modified": "2026-05-03T00:00:00.000Z",
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{token}}"
+        },
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "params": [],
+      "body": {
+        "type": "json",
+        "raw": "{\n  \"name\": \"Maria Oliveira Atualizada\",\n  \"document\": \"{{customerDocument}}\",\n  \"phone\": \"11888888888\",\n  \"email\": \"maria.atualizada@example.com\"\n}",
+        "form": []
+      },
+      "tests": []
+    },
+    {
+      "_id": "req_customers_delete",
+      "colId": "col_oficina_mecanica_api",
+      "containerId": "fld_customers",
+      "name": "Delete Customer",
+      "url": "{{baseUrl}}/api/customers/{{customerId}}",
+      "method": "DELETE",
+      "sortNum": 24000,
+      "created": "2026-05-03T00:00:00.000Z",
+      "modified": "2026-05-03T00:00:00.000Z",
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{token}}"
+        }
+      ],
+      "params": [],
+      "tests": []
+    },
+    {
+      "_id": "req_vehicles_get_all",
+      "colId": "col_oficina_mecanica_api",
+      "containerId": "fld_vehicles",
+      "name": "Get All Vehicles",
+      "url": "{{baseUrl}}/api/vehicles",
+      "method": "GET",
+      "sortNum": 30000,
+      "created": "2026-05-03T00:00:00.000Z",
+      "modified": "2026-05-03T00:00:00.000Z",
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{token}}"
+        }
+      ],
+      "params": [],
+      "tests": []
+    },
+    {
+      "_id": "req_vehicles_get_by_id",
+      "colId": "col_oficina_mecanica_api",
+      "containerId": "fld_vehicles",
+      "name": "Get Vehicle By Id",
+      "url": "{{baseUrl}}/api/vehicles/{{vehicleId}}",
+      "method": "GET",
+      "sortNum": 31000,
+      "created": "2026-05-03T00:00:00.000Z",
+      "modified": "2026-05-03T00:00:00.000Z",
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{token}}"
+        }
+      ],
+      "params": [],
+      "tests": []
+    },
+    {
+      "_id": "req_vehicles_create",
+      "colId": "col_oficina_mecanica_api",
+      "containerId": "fld_vehicles",
+      "name": "Create Vehicle",
+      "url": "{{baseUrl}}/api/vehicles",
+      "method": "POST",
+      "sortNum": 32000,
+      "created": "2026-05-03T00:00:00.000Z",
+      "modified": "2026-05-03T00:00:00.000Z",
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{token}}"
+        },
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "params": [],
+      "body": {
+        "type": "json",
+        "raw": "{\n  \"customerId\": \"{{customerId}}\",\n  \"plate\": \"BRA2E19\",\n  \"brand\": \"Volkswagen\",\n  \"model\": \"Gol\",\n  \"year\": 2020\n}",
+        "form": []
+      },
+      "tests": []
+    },
+    {
+      "_id": "req_vehicles_update",
+      "colId": "col_oficina_mecanica_api",
+      "containerId": "fld_vehicles",
+      "name": "Update Vehicle",
+      "url": "{{baseUrl}}/api/vehicles/{{vehicleId}}",
+      "method": "PUT",
+      "sortNum": 33000,
+      "created": "2026-05-03T00:00:00.000Z",
+      "modified": "2026-05-03T00:00:00.000Z",
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{token}}"
+        },
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "params": [],
+      "body": {
+        "type": "json",
+        "raw": "{\n  \"customerId\": \"{{customerId}}\",\n  \"plate\": \"BRA2E19\",\n  \"brand\": \"Volkswagen\",\n  \"model\": \"Gol 1.0\",\n  \"year\": 2021\n}",
+        "form": []
+      },
+      "tests": []
+    },
+    {
+      "_id": "req_vehicles_delete",
+      "colId": "col_oficina_mecanica_api",
+      "containerId": "fld_vehicles",
+      "name": "Delete Vehicle",
+      "url": "{{baseUrl}}/api/vehicles/{{vehicleId}}",
+      "method": "DELETE",
+      "sortNum": 34000,
+      "created": "2026-05-03T00:00:00.000Z",
+      "modified": "2026-05-03T00:00:00.000Z",
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{token}}"
+        }
+      ],
+      "params": [],
+      "tests": []
+    },
+    {
+      "_id": "req_services_get_all",
+      "colId": "col_oficina_mecanica_api",
+      "containerId": "fld_services",
+      "name": "Get All Services",
+      "url": "{{baseUrl}}/api/services",
+      "method": "GET",
+      "sortNum": 40000,
+      "created": "2026-05-03T00:00:00.000Z",
+      "modified": "2026-05-03T00:00:00.000Z",
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{token}}"
+        }
+      ],
+      "params": [],
+      "tests": []
+    },
+    {
+      "_id": "req_services_get_by_id",
+      "colId": "col_oficina_mecanica_api",
+      "containerId": "fld_services",
+      "name": "Get Service By Id",
+      "url": "{{baseUrl}}/api/services/{{serviceId}}",
+      "method": "GET",
+      "sortNum": 41000,
+      "created": "2026-05-03T00:00:00.000Z",
+      "modified": "2026-05-03T00:00:00.000Z",
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{token}}"
+        }
+      ],
+      "params": [],
+      "tests": []
+    },
+    {
+      "_id": "req_services_create",
+      "colId": "col_oficina_mecanica_api",
+      "containerId": "fld_services",
+      "name": "Create Service",
+      "url": "{{baseUrl}}/api/services",
+      "method": "POST",
+      "sortNum": 42000,
+      "created": "2026-05-03T00:00:00.000Z",
+      "modified": "2026-05-03T00:00:00.000Z",
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{token}}"
+        },
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "params": [],
+      "body": {
+        "type": "json",
+        "raw": "{\n  \"name\": \"Troca de oleo\",\n  \"description\": \"Troca de oleo do motor e filtro\",\n  \"price\": 180.00,\n  \"estimatedHours\": 1.5\n}",
+        "form": []
+      },
+      "tests": []
+    },
+    {
+      "_id": "req_services_update",
+      "colId": "col_oficina_mecanica_api",
+      "containerId": "fld_services",
+      "name": "Update Service",
+      "url": "{{baseUrl}}/api/services/{{serviceId}}",
+      "method": "PUT",
+      "sortNum": 43000,
+      "created": "2026-05-03T00:00:00.000Z",
+      "modified": "2026-05-03T00:00:00.000Z",
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{token}}"
+        },
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "params": [],
+      "body": {
+        "type": "json",
+        "raw": "{\n  \"name\": \"Troca de oleo completa\",\n  \"description\": \"Troca de oleo, filtro e revisao rapida\",\n  \"price\": 220.00,\n  \"estimatedHours\": 2.0\n}",
+        "form": []
+      },
+      "tests": []
+    },
+    {
+      "_id": "req_services_delete",
+      "colId": "col_oficina_mecanica_api",
+      "containerId": "fld_services",
+      "name": "Delete Service",
+      "url": "{{baseUrl}}/api/services/{{serviceId}}",
+      "method": "DELETE",
+      "sortNum": 44000,
+      "created": "2026-05-03T00:00:00.000Z",
+      "modified": "2026-05-03T00:00:00.000Z",
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{token}}"
+        }
+      ],
+      "params": [],
+      "tests": []
+    },
+    {
+      "_id": "req_parts_get_all",
+      "colId": "col_oficina_mecanica_api",
+      "containerId": "fld_parts",
+      "name": "Get All Parts",
+      "url": "{{baseUrl}}/api/parts",
+      "method": "GET",
+      "sortNum": 50000,
+      "created": "2026-05-03T00:00:00.000Z",
+      "modified": "2026-05-03T00:00:00.000Z",
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{token}}"
+        }
+      ],
+      "params": [],
+      "tests": []
+    },
+    {
+      "_id": "req_parts_get_by_id",
+      "colId": "col_oficina_mecanica_api",
+      "containerId": "fld_parts",
+      "name": "Get Part By Id",
+      "url": "{{baseUrl}}/api/parts/{{partId}}",
+      "method": "GET",
+      "sortNum": 51000,
+      "created": "2026-05-03T00:00:00.000Z",
+      "modified": "2026-05-03T00:00:00.000Z",
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{token}}"
+        }
+      ],
+      "params": [],
+      "tests": []
+    },
+    {
+      "_id": "req_parts_create",
+      "colId": "col_oficina_mecanica_api",
+      "containerId": "fld_parts",
+      "name": "Create Part",
+      "url": "{{baseUrl}}/api/parts",
+      "method": "POST",
+      "sortNum": 52000,
+      "created": "2026-05-03T00:00:00.000Z",
+      "modified": "2026-05-03T00:00:00.000Z",
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{token}}"
+        },
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "params": [],
+      "body": {
+        "type": "json",
+        "raw": "{\n  \"name\": \"Filtro de oleo\",\n  \"sku\": \"FLT-OIL-001\",\n  \"unitPrice\": 45.90,\n  \"stockQuantity\": 20\n}",
+        "form": []
+      },
+      "tests": []
+    },
+    {
+      "_id": "req_parts_update",
+      "colId": "col_oficina_mecanica_api",
+      "containerId": "fld_parts",
+      "name": "Update Part",
+      "url": "{{baseUrl}}/api/parts/{{partId}}",
+      "method": "PUT",
+      "sortNum": 53000,
+      "created": "2026-05-03T00:00:00.000Z",
+      "modified": "2026-05-03T00:00:00.000Z",
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{token}}"
+        },
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "params": [],
+      "body": {
+        "type": "json",
+        "raw": "{\n  \"name\": \"Filtro de oleo premium\",\n  \"sku\": \"FLT-OIL-001\",\n  \"unitPrice\": 59.90,\n  \"stockQuantity\": 25\n}",
+        "form": []
+      },
+      "tests": []
+    },
+    {
+      "_id": "req_parts_delete",
+      "colId": "col_oficina_mecanica_api",
+      "containerId": "fld_parts",
+      "name": "Delete Part",
+      "url": "{{baseUrl}}/api/parts/{{partId}}",
+      "method": "DELETE",
+      "sortNum": 54000,
+      "created": "2026-05-03T00:00:00.000Z",
+      "modified": "2026-05-03T00:00:00.000Z",
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{token}}"
+        }
+      ],
+      "params": [],
+      "tests": []
+    },
+    {
+      "_id": "req_service_orders_get_all",
+      "colId": "col_oficina_mecanica_api",
+      "containerId": "fld_service_orders",
+      "name": "Get All Service Orders",
+      "url": "{{baseUrl}}/api/service-orders",
+      "method": "GET",
+      "sortNum": 60000,
+      "created": "2026-05-03T00:00:00.000Z",
+      "modified": "2026-05-03T00:00:00.000Z",
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{token}}"
+        }
+      ],
+      "params": [],
+      "tests": []
+    },
+    {
+      "_id": "req_service_orders_get_by_id",
+      "colId": "col_oficina_mecanica_api",
+      "containerId": "fld_service_orders",
+      "name": "Get Service Order By Id",
+      "url": "{{baseUrl}}/api/service-orders/{{serviceOrderId}}",
+      "method": "GET",
+      "sortNum": 61000,
+      "created": "2026-05-03T00:00:00.000Z",
+      "modified": "2026-05-03T00:00:00.000Z",
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{token}}"
+        }
+      ],
+      "params": [],
+      "tests": []
+    },
+    {
+      "_id": "req_service_orders_create",
+      "colId": "col_oficina_mecanica_api",
+      "containerId": "fld_service_orders",
+      "name": "Create Service Order",
+      "url": "{{baseUrl}}/api/service-orders",
+      "method": "POST",
+      "sortNum": 62000,
+      "created": "2026-05-03T00:00:00.000Z",
+      "modified": "2026-05-03T00:00:00.000Z",
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{token}}"
+        },
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "params": [],
+      "body": {
+        "type": "json",
+        "raw": "{\n  \"customerDocument\": \"{{customerDocument}}\",\n  \"vehicle\": {\n    \"plate\": \"BRA2E19\",\n    \"brand\": \"Volkswagen\",\n    \"model\": \"Gol\",\n    \"year\": 2020\n  },\n  \"customerRequest\": [\n    \"Cliente relata barulho no motor.\",\n    \"Cliente relata vazamento de oleo.\"\n  ]\n}",
+        "form": []
+      },
+      "tests": []
+    },
+    {
+      "_id": "req_service_orders_change_status",
+      "colId": "col_oficina_mecanica_api",
+      "containerId": "fld_service_orders",
+      "name": "Change Status",
+      "url": "{{baseUrl}}/api/service-orders/{{serviceOrderId}}/status",
+      "method": "POST",
+      "sortNum": 63000,
+      "created": "2026-05-03T00:00:00.000Z",
+      "modified": "2026-05-03T00:00:00.000Z",
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{token}}"
+        },
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "params": [],
+      "body": {
+        "type": "json",
+        "raw": "{\n  \"status\": 5\n}",
+        "form": []
+      },
+      "tests": []
+    },
+    {
+      "_id": "req_service_orders_update_budget",
+      "colId": "col_oficina_mecanica_api",
+      "containerId": "fld_service_orders",
+      "name": "Update Budget",
+      "url": "{{baseUrl}}/api/service-orders/{{serviceOrderId}}/budget",
+      "method": "PATCH",
+      "sortNum": 64000,
+      "created": "2026-05-03T00:00:00.000Z",
+      "modified": "2026-05-03T00:00:00.000Z",
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{token}}"
+        },
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "params": [],
+      "body": {
+        "type": "json",
+        "raw": "{\n  \"serviceIds\": [\n    \"{{serviceId}}\"\n  ],\n  \"parts\": [\n    {\n      \"partId\": \"{{partId}}\",\n      \"quantity\": 1\n    }\n  ]\n}",
+        "form": []
+      },
+      "tests": []
+    },
+    {
+      "_id": "req_service_orders_add_additional_items",
+      "colId": "col_oficina_mecanica_api",
+      "containerId": "fld_service_orders",
+      "name": "Add Additional Budget Items",
+      "url": "{{baseUrl}}/api/service-orders/{{serviceOrderId}}/budget/additional-items",
+      "method": "PATCH",
+      "sortNum": 65000,
+      "created": "2026-05-03T00:00:00.000Z",
+      "modified": "2026-05-03T00:00:00.000Z",
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{token}}"
+        },
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "params": [],
+      "body": {
+        "type": "json",
+        "raw": "{\n  \"serviceIds\": [\n    \"{{serviceId}}\"\n  ],\n  \"parts\": [\n    {\n      \"partId\": \"{{partId}}\",\n      \"quantity\": 1\n    }\n  ]\n}",
+        "form": []
+      },
+      "tests": []
+    },
+    {
+      "_id": "req_service_orders_start_diagnosis",
+      "colId": "col_oficina_mecanica_api",
+      "containerId": "fld_service_orders",
+      "name": "Start Diagnosis",
+      "url": "{{baseUrl}}/api/service-orders/{{serviceOrderId}}/diagnosis/start",
+      "method": "POST",
+      "sortNum": 66000,
+      "created": "2026-05-03T00:00:00.000Z",
+      "modified": "2026-05-03T00:00:00.000Z",
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{token}}"
+        }
+      ],
+      "params": [],
+      "tests": []
+    },
+    {
+      "_id": "req_service_orders_approval",
+      "colId": "col_oficina_mecanica_api",
+      "containerId": "fld_service_orders",
+      "name": "Approve Budget",
+      "url": "{{baseUrl}}/api/service-orders/{{serviceOrderId}}/approval",
+      "method": "POST",
+      "sortNum": 67000,
+      "created": "2026-05-03T00:00:00.000Z",
+      "modified": "2026-05-03T00:00:00.000Z",
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{token}}"
+        },
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "params": [],
+      "body": {
+        "type": "json",
+        "raw": "{\n  \"approvalId\": \"{{approvalId}}\",\n  \"approved\": true\n}",
+        "form": []
+      },
+      "tests": []
+    },
+    {
+      "_id": "req_service_orders_cancel",
+      "colId": "col_oficina_mecanica_api",
+      "containerId": "fld_service_orders",
+      "name": "Cancel",
+      "url": "{{baseUrl}}/api/service-orders/{{serviceOrderId}}/cancel",
+      "method": "POST",
+      "sortNum": 68000,
+      "created": "2026-05-03T00:00:00.000Z",
+      "modified": "2026-05-03T00:00:00.000Z",
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{token}}"
+        }
+      ],
+      "params": [],
+      "tests": []
+    },
+    {
+      "_id": "req_service_orders_metrics",
+      "colId": "col_oficina_mecanica_api",
+      "containerId": "fld_service_orders",
+      "name": "Get Execution Time Metrics",
+      "url": "{{baseUrl}}/api/service-orders/metrics/execution-time",
+      "method": "GET",
+      "sortNum": 69000,
+      "created": "2026-05-03T00:00:00.000Z",
+      "modified": "2026-05-03T00:00:00.000Z",
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{token}}"
+        }
+      ],
+      "params": [],
+      "tests": []
+    },
+    {
+      "_id": "req_service_orders_metrics_by_id",
+      "colId": "col_oficina_mecanica_api",
+      "containerId": "fld_service_orders",
+      "name": "Get Execution Time Metrics By Id",
+      "url": "{{baseUrl}}/api/service-orders/{{serviceOrderId}}/metrics/execution-time",
+      "method": "GET",
+      "sortNum": 70000,
+      "created": "2026-05-03T00:00:00.000Z",
+      "modified": "2026-05-03T00:00:00.000Z",
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{token}}"
+        }
+      ],
+      "params": [],
+      "tests": []
+    },
+    {
+      "_id": "req_service_orders_public_status",
+      "colId": "col_oficina_mecanica_api",
+      "containerId": "fld_service_orders",
+      "name": "Get Public Status",
+      "url": "{{baseUrl}}/api/service-orders/public/{{serviceOrderNumber}}",
+      "method": "GET",
+      "sortNum": 71000,
+      "created": "2026-05-03T00:00:00.000Z",
+      "modified": "2026-05-03T00:00:00.000Z",
+      "headers": [],
+      "params": [
+        {
+          "name": "document",
+          "value": "{{customerDocument}}",
+          "isPath": false
+        }
+      ],
+      "tests": []
+    }
+  ]
+}

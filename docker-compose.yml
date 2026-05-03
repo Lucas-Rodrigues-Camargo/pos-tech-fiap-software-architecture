@@ -1,0 +1,52 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: oficina-mecanica-postgres
+    environment:
+      POSTGRES_DB: oficina_mecanica
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d oficina_mecanica"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  oficina-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: oficina-mecanica-api
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "8080:8080"
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ConnectionStrings__DefaultConnection: Host=postgres;Port=5432;Database=oficina_mecanica;Username=postgres;Password=postgres
+      Jwt__Issuer: OficinaMecanica
+      Jwt__Audience: OficinaMecanica.Admin
+      Jwt__Key: super-secret-key-for-dev-only-2026
+
+  sonarqube:
+    image: sonarqube:lts-community
+    container_name: oficina-mecanica-sonarqube
+    ports:
+      - "9000:9000"
+    environment:
+      SONAR_ES_BOOTSTRAP_CHECKS_DISABLE: "true"
+    volumes:
+      - sonarqube_data:/opt/sonarqube/data
+      - sonarqube_extensions:/opt/sonarqube/extensions
+      - sonarqube_logs:/opt/sonarqube/logs
+
+volumes:
+  postgres_data:
+  sonarqube_data:
+  sonarqube_extensions:
+  sonarqube_logs:
