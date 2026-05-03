@@ -2,6 +2,57 @@
 
 MVP em C# para o Tech Challenge da oficina mecanica. A solucao usa um monolito em camadas com foco em ordens de servico, clientes, veiculos, catalogo de servicos, pecas, estoque, autenticacao e metricas operacionais.
 
+## Time
+
+- Lucas Rodrigues Camargo
+- Graziella Garcia Camargo
+
+## DDD
+
+### Dicionario ubiquo
+
+Este projeto usa os seguintes termos de dominio como linguagem comum entre codigo, API e documentacao:
+
+- Cliente: pessoa fisica ou juridica atendida pela oficina, identificada por CPF ou CNPJ.
+- Veiculo: automovel vinculado a um cliente, identificado principalmente pela placa.
+- Ordem de servico ou OS: registro do atendimento realizado pela oficina para um cliente e veiculo.
+- Numero da OS: identificador publico da ordem, gerado no formato `OS-...`, usado na consulta publica.
+- Solicitacao do cliente: lista de relatos informados no recebimento da OS, como barulho, vazamento ou falha percebida.
+- Diagnostico: etapa em que a oficina inicia a avaliacao tecnica do problema informado.
+- Catalogo de servicos: lista de servicos que podem compor o orcamento de uma OS.
+- Peca: item de estoque usado na execucao de uma OS, com SKU, preco unitario e quantidade disponivel.
+- Reserva de estoque: baixa temporaria da quantidade de pecas quando um orcamento e montado.
+- Orcamento: conjunto de servicos e pecas sugeridos para resolver a OS, com valor total.
+- Itens adicionais: servicos ou pecas incluidos depois do orcamento inicial e enviados para nova aprovacao.
+- Aprovacao: decisao do cliente sobre o orcamento; quando aprovado, a OS entra em execucao.
+- Reprovacao: decisao do cliente recusando o orcamento; as pecas reservadas retornam ao estoque.
+- Execucao: etapa em que a oficina realiza os servicos aprovados.
+- Finalizacao: conclusao tecnica do servico antes da entrega ao cliente.
+- Entrega: etapa final em que o veiculo e devolvido ao cliente.
+- Metricas de execucao: indicadores de tempo total e tempo entre etapas da OS.
+
+### Linguagem pictografica
+
+#### Criacao da ordem de servico
+
+![Criacao da ordem de servico](documents/creation_order_of_service.jpeg)
+
+#### Ordem de servico - cliente
+
+![Ordem de servico - cliente](documents/order_of_service_client.jpeg)
+
+#### Ordem de servico - oficina
+
+![Ordem de servico - oficina](documents/order_of_service_shop.jpeg)
+
+#### Gestao da oficina
+
+![Gestao da oficina](documents/management_shop.jpeg)
+
+## Event Storming
+
+![Event Storming](documents/event-storming.jpeg)
+
 ## Stack
 
 - ASP.NET Core Web API (.NET 10)
