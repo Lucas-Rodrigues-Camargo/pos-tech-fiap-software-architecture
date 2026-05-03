@@ -103,29 +103,46 @@ As credenciais ficam persistidas no banco via Identity, com senha armazenada em 
 
 ### Auth
 
-- `POST /api/auth/register`
-- `POST /api/auth/login`
+- `POST /api/auth/register`: cadastra um novo usuario da API e define se ele sera admin.
+- `POST /api/auth/login`: autentica um usuario e retorna um token JWT para acessar endpoints protegidos.
 
 ### Clientes, veiculos, servicos e pecas
 
-- `GET|POST|PUT|DELETE /api/customers`
-- `GET|POST|PUT|DELETE /api/vehicles`
-- `GET|POST|PUT|DELETE /api/services`
-- `GET|POST|PUT|DELETE /api/parts`
+- `GET /api/customers`: lista os clientes cadastrados.
+- `GET /api/customers/{id}`: consulta os dados de um cliente pelo identificador.
+- `POST /api/customers`: cria um cliente com CPF ou CNPJ valido.
+- `PUT /api/customers/{id}`: atualiza os dados cadastrais de um cliente.
+- `DELETE /api/customers/{id}`: remove um cliente existente.
+- `GET /api/vehicles`: lista os veiculos cadastrados com seus respectivos clientes.
+- `GET /api/vehicles/{id}`: consulta um veiculo pelo identificador.
+- `POST /api/vehicles`: cria um veiculo vinculado a um cliente.
+- `PUT /api/vehicles/{id}`: atualiza placa, marca, modelo ou ano de um veiculo.
+- `DELETE /api/vehicles/{id}`: remove um veiculo existente.
+- `GET /api/services`: lista os servicos disponiveis no catalogo da oficina.
+- `GET /api/services/{id}`: consulta um servico do catalogo pelo identificador.
+- `POST /api/services`: cria um servico com nome, descricao, preco e horas estimadas.
+- `PUT /api/services/{id}`: atualiza os dados de um servico do catalogo.
+- `DELETE /api/services/{id}`: remove um servico do catalogo.
+- `GET /api/parts`: lista as pecas em estoque.
+- `GET /api/parts/{id}`: consulta uma peca pelo identificador.
+- `POST /api/parts`: cria uma peca com SKU, preco unitario e quantidade inicial.
+- `PUT /api/parts/{id}`: atualiza dados, preco ou quantidade em estoque de uma peca.
+- `DELETE /api/parts/{id}`: remove uma peca existente.
 
 ### Ordens de servico
 
-- `GET /api/service-orders`
-- `GET /api/service-orders/{id}`
-- `POST /api/service-orders`
-- `POST /api/service-orders/{id}/diagnosis/start`
-- `PATCH /api/service-orders/{id}/budget`
-- `POST /api/service-orders/{id}/approval`
-- `POST /api/service-orders/{id}/cancel`
-- `POST /api/service-orders/{id}/status`
-- `GET /api/service-orders/public/{number}?document=...`
-- `GET /api/service-orders/metrics/execution-time`
-- `GET /api/service-orders/{id}/metrics/execution-time`
+- `GET /api/service-orders`: lista todas as ordens de servico com cliente, veiculo, itens e status.
+- `GET /api/service-orders/{id}`: consulta os detalhes completos de uma OS pelo identificador.
+- `POST /api/service-orders`: cria uma OS recebida a partir do documento do cliente, veiculo e solicitacoes.
+- `POST /api/service-orders/{id}/diagnosis/start`: inicia o diagnostico e muda a OS para `InDiagnosis`.
+- `PATCH /api/service-orders/{id}/budget`: adiciona servicos e pecas ao orcamento, reserva estoque e envia para aprovacao.
+- `PATCH /api/service-orders/{id}/budget/additional-items`: adiciona itens extras ao orcamento e gera nova aprovacao.
+- `POST /api/service-orders/{id}/approval`: aprova ou reprova o orcamento informado.
+- `POST /api/service-orders/{id}/cancel`: cancela uma OS quando o status ainda permite cancelamento.
+- `POST /api/service-orders/{id}/status`: altera a OS para `Finished` ou `Delivered`.
+- `GET /api/service-orders/public/{number}?document=...`: consulta publica da OS pelo numero e documento do cliente.
+- `GET /api/service-orders/metrics/execution-time`: retorna metricas gerais de tempo de execucao das OS finalizadas.
+- `GET /api/service-orders/{id}/metrics/execution-time`: retorna a linha do tempo e tempos entre etapas de uma OS.
 
 ## Criacao de ordem de servico
 
