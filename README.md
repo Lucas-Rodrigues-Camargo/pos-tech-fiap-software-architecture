@@ -316,6 +316,80 @@ http://localhost:9000/dashboard?id=oficina-mecanica
 
 Observacao: em alguns ambientes Linux, o SonarQube pode exigir ajuste de `vm.max_map_count`. Para uso local via Docker Compose, foi configurado `SONAR_ES_BOOTSTRAP_CHECKS_DISABLE=true`.
 
+## Relatorio de vulnerabilidades
+
+Ultima verificacao local: `04/05/2026`.
+
+Foi executada uma analise local com SonarQube via Docker Compose e uma auditoria de vulnerabilidades conhecidas em dependencias NuGet.
+
+### SonarQube
+
+Ferramentas utilizadas:
+
+- SonarQube Community `9.9.8.100196`, executado pelo servico `sonarqube` do `docker-compose.yml`.
+- SonarScanner for .NET `11.2.1`.
+- .NET SDK `10.0.203`.
+
+Comandos executados:
+
+```bash
+docker compose up -d sonarqube
+dotnet sonarscanner begin /k:"oficina-mecanica" /n:"Oficina Mecanica" /d:sonar.host.url="http://localhost:9000" /d:sonar.login="admin" /d:sonar.password="<SENHA_ADMIN>" /d:sonar.exclusions="**/bin/**,**/obj/**,.vs/**,.sonarqube/**" /d:sonar.coverage.exclusions="**/Program.cs,**/Migrations/**" /d:sonar.cs.opencover.reportsPaths="OficinaMecanica.Tests/TestResults/**/coverage.opencover.xml" /d:sonar.cs.vstest.reportsPaths="OficinaMecanica.Tests/TestResults/**/*.trx"
+dotnet build OficinaMecanica.slnx --no-incremental
+dotnet test OficinaMecanica.Tests/OficinaMecanica.Tests.csproj --no-build --settings OficinaMecanica.Tests/coverlet.runsettings --logger "trx;LogFileName=test-results.trx" --collect:"XPlat Code Coverage" --results-directory OficinaMecanica.Tests/TestResults
+dotnet sonarscanner end /d:sonar.login="admin" /d:sonar.password="<SENHA_ADMIN>"
+```
+
+Resultado consolidado no SonarQube:
+
+- Quality Gate: `OK`.
+- Bugs: `0`.
+- Vulnerabilidades: `0`.
+- Security Hotspots: `5` para revisao.
+- Code Smells: `10`.
+- Testes: `38`, com `0` falhas e `0` erros.
+- Cobertura reportada pelo SonarQube: `82.0%`.
+- Cobertura de linhas: `84.8%`.
+- Cobertura de branches: `68.4%`.
+- Duplicacao de linhas: `1.0%`.
+- Linhas de codigo analisadas: `2637`.
+
+Security Hotspots identificados:
+
+- `OficinaMecanica.Api/appsettings.json`, linhas `3` e `13`: possiveis credenciais hard-coded detectadas em connection string/configuracao.
+- `OficinaMecanica.Application/Common/DocumentValidator.cs`, linhas `7` e `18`: expressoes regulares sem timeout explicito, com risco potencial de consumo excessivo de processamento.
+- `Dockerfile`, linha `13`: imagem/container executando com usuario padrao `root` ou `containerAdministrator`.
+
+O painel local fica disponivel em:
+
+```text
+http://localhost:9000/dashboard?id=oficina-mecanica
+```
+
+### Auditoria NuGet
+
+A verificacao de vulnerabilidades conhecidas em dependencias NuGet foi executada com a fonte `https://api.nuget.org/v3/index.json` e a opcao `--include-transitive`.
+
+Resultado:
+
+- `OficinaMecanica.Api`: nenhuma vulnerabilidade conhecida encontrada.
+- `OficinaMecanica.Application`: nenhuma vulnerabilidade conhecida encontrada.
+- `OficinaMecanica.Domain`: nenhuma vulnerabilidade conhecida encontrada.
+- `OficinaMecanica.Infrastructure`: nenhuma vulnerabilidade conhecida encontrada.
+- `OficinaMecanica.Tests`: nenhuma vulnerabilidade conhecida encontrada.
+
+Comandos utilizados:
+
+```bash
+dotnet list OficinaMecanica.Api/OficinaMecanica.Api.csproj package --vulnerable --include-transitive
+dotnet list OficinaMecanica.Application/OficinaMecanica.Application.csproj package --vulnerable --include-transitive
+dotnet list OficinaMecanica.Domain/OficinaMecanica.Domain.csproj package --vulnerable --include-transitive
+dotnet list OficinaMecanica.Infrastructure/OficinaMecanica.Infrastructure.csproj package --vulnerable --include-transitive
+dotnet list OficinaMecanica.Tests/OficinaMecanica.Tests.csproj package --vulnerable --include-transitive
+```
+
+Essa auditoria cobre vulnerabilidades divulgadas para pacotes NuGet diretos e transitivos. O SonarQube complementa a avaliacao com bugs, code smells, security hotspots e metricas gerais de qualidade.
+
 ## Como testar
 
 ```bash
@@ -325,7 +399,7 @@ dotnet test
 Resultado esperado atual:
 
 ```text
-Aprovado! - Com falha: 0, Aprovado: 37, Total: 37
+Aprovado! - Com falha: 0, Aprovado: 38, Total: 38
 ```
 
 ## Fluxo sugerido para demonstracao
