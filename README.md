@@ -323,12 +323,14 @@ A documentacao inclui:
 
 ## Collections de requests
 
-A pasta `request-collections/` contem exemplos de requests da aplicacao para facilitar testes manuais em clients HTTP. Os arquivos foram gerados em formato compativel com Thunder Client, mas tambem servem como referencia para montar ou adaptar as chamadas em outros clients, como Postman, Insomnia ou Bruno.
+A pasta `request-collections/` contem exemplos de requests da aplicacao para facilitar testes manuais no Postman.
 
-- Collection: `request-collections/oficina-mecanica-api-requests.collection.json`
-- Environment local: `request-collections/oficina-mecanica-local.environment.json`
+- Postman collection: `request-collections/oficina-mecanica-api-requests.postman_collection.json`
+- Postman environment local: `request-collections/oficina-mecanica-local.postman_environment.json`
 
-O environment usa `baseUrl=http://localhost:5240`, porta padrao do `dotnet run`. Para testar a API via Docker, altere `baseUrl` para `http://localhost:8080`. Depois de executar `POST /api/auth/login`, copie o `accessToken` retornado para a variavel `token` antes de chamar endpoints protegidos.
+O environment usa `baseUrl=http://localhost:5240`, porta padrao do `dotnet run`. Para testar a API via Docker, altere `baseUrl` para `http://localhost:8080`.
+
+No Postman, importe a collection e o environment locais, selecione o environment `Oficina Mecanica Local` e execute `Auth / Login Admin`. O script de teste do login salva o `accessToken` retornado na variavel `token`, e as demais requests protegidas herdam automaticamente a autenticacao `Bearer {{token}}` configurada na collection.
 
 ## Como rodar localmente
 
