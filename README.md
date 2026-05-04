@@ -4,8 +4,8 @@ MVP em C# para o Tech Challenge da oficina mecanica. A solucao usa um monolito e
 
 ## Time
 
-- Lucas Rodrigues Camargo
-- Graziella Garcia Camargo
+- Lucas Rodrigues Camargo (rm367435)
+- Graziella Garcia Camargo (rm367436)
 
 ## DDD
 
