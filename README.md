@@ -53,6 +53,113 @@ Este projeto usa os seguintes termos de dominio como linguagem comum entre codig
 
 ![Event Storming](documents/event-storming.jpeg)
 
+## Diagrama de classes do banco
+
+O diagrama abaixo representa as principais tabelas persistidas pelo `OficinaDbContext`, incluindo as entidades de dominio e as tabelas do ASP.NET Identity renomeadas para o padrao `tb_*`.
+
+```mermaid
+classDiagram
+    direction LR
+
+    class tb_customers {
+        uuid id
+        string name
+        string document
+        string phone
+        string email
+    }
+
+    class tb_vehicles {
+        uuid id
+        uuid customer_id
+        string plate
+        string brand
+        string model
+        int year
+    }
+
+    class tb_services_catalog {
+        uuid id
+        string name
+        string description
+        decimal price
+        decimal estimated_hours
+    }
+
+    class tb_parts {
+        uuid id
+        string name
+        string sku
+        decimal unit_price
+        int stock_quantity
+    }
+
+    class tb_service_orders {
+        uuid id
+        string number
+        text_array customer_request
+        uuid customer_id
+        uuid vehicle_id
+        string status
+        datetime created_at_utc
+        datetime diagnostic_started_at_utc
+        datetime budget_sent_at_utc
+        datetime approved_at_utc
+        datetime execution_started_at_utc
+        datetime finished_at_utc
+        datetime delivered_at_utc
+    }
+
+    class tb_service_order_service_items {
+        uuid id
+        uuid service_order_id
+        uuid service_catalog_item_id
+        string description
+        decimal unit_price
+        decimal estimated_hours
+        bool is_additional
+        uuid additional_request_id
+    }
+
+    class tb_service_order_part_items {
+        uuid id
+        uuid service_order_id
+        uuid part_id
+        string description
+        decimal unit_price
+        int quantity
+        bool is_additional
+        uuid additional_request_id
+    }
+
+    class tb_users {
+        string id
+        string user_name
+        string email
+        string password_hash
+    }
+
+    class tb_roles {
+        string id
+        string name
+    }
+
+    class tb_users_roles {
+        string user_id
+        string role_id
+    }
+
+    tb_customers "1" --> "*" tb_vehicles : possui
+    tb_customers "1" --> "*" tb_service_orders : solicita
+    tb_vehicles "1" --> "*" tb_service_orders : atende
+    tb_service_orders "1" --> "*" tb_service_order_service_items : contem
+    tb_service_orders "1" --> "*" tb_service_order_part_items : contem
+    tb_services_catalog "1" ..> "*" tb_service_order_service_items : referencia
+    tb_parts "1" ..> "*" tb_service_order_part_items : reserva
+    tb_users "1" --> "*" tb_users_roles : recebe
+    tb_roles "1" --> "*" tb_users_roles : agrupa
+```
+
 ## Stack
 
 - ASP.NET Core Web API (.NET 10)
