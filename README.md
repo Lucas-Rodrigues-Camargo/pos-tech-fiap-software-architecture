@@ -180,8 +180,6 @@ classDiagram
 - CRUD de veiculos
 - CRUD do catalogo de servicos
 - CRUD de pecas com controle de estoque
-- Tabelas e colunas no padrao `snake_case` com prefixo `tb_`
-- Tabelas do Identity sem prefixo `asp_net`
 - Criacao de ordem de servico com status inicial `Received`
 - Solicitacoes do cliente salvas como lista de strings em `customer_request`
 - Inicio de diagnostico com `diagnosticStartedAtUtc`
@@ -191,7 +189,6 @@ classDiagram
 - Endpoint de aprovacao/reprovacao do orcamento
 - Reprovacao com status `Reproved` e devolucao de pecas ao estoque
 - Cancelamento permitido apenas em `Received`, `InDiagnosis` e `WaitingApproval`
-- Status salvo no banco como string do enum
 - Alteracao de status por numero do enum para `Finished` e `Delivered`
 - Consulta publica da ordem por numero e documento do cliente
 - Metricas gerais de tempo de execucao
@@ -426,8 +423,6 @@ http://localhost:9000/dashboard?id=oficina-mecanica
 Observacao: em alguns ambientes Linux, o SonarQube pode exigir ajuste de `vm.max_map_count`. Para uso local via Docker Compose, foi configurado `SONAR_ES_BOOTSTRAP_CHECKS_DISABLE=true`.
 
 ## Relatorio de vulnerabilidades
-
-Ultima verificacao local: `04/05/2026`.
 
 Foi executada uma analise local com SonarQube via Docker Compose e uma auditoria de vulnerabilidades conhecidas em dependencias NuGet.
 
