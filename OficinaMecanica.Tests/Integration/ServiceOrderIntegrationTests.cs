@@ -1,4 +1,4 @@
-﻿using Microsoft.Data.Sqlite;
+using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using OficinaMecanica.Application.Contracts.ServiceOrders;
 using OficinaMecanica.Application.Features.ServiceOrders;
@@ -24,7 +24,7 @@ public sealed class ServiceOrderIntegrationTests
         await using var context = new OficinaDbContext(options);
         await context.Database.EnsureCreatedAsync();
 
-        var customer = new Customer("Joao Silva", "12345678901", "11999999999", "joao@oficina.local");
+        var customer = new Customer("Joao Silva", "52998224725", "11999999999", "joao@oficina.local");
         var vehicle = new Vehicle(customer.Id, "BRA2E19", "Volkswagen", "Gol", 2020);
         var serviceItem = new ServiceCatalogItem("Troca de oleo", "Troca de oleo e filtro", 180m, 1.5m);
         var part = new Part("Filtro de oleo", "FLT-001", 35m, 5);
@@ -42,7 +42,7 @@ public sealed class ServiceOrderIntegrationTests
             context);
 
         var request = new CreateServiceOrderRequest(
-            "123.456.789-01",
+            "529.982.247-25",
             new VehicleSnapshot("BRA2E19", "Volkswagen", "Gol", 2020),
             ["Cliente relata barulho no motor.", "Cliente relata vazamento de oleo."]);
 
@@ -87,7 +87,7 @@ public sealed class ServiceOrderIntegrationTests
         await using var context = new OficinaDbContext(options);
         await context.Database.EnsureCreatedAsync();
 
-        var customer = new Customer("Joao Silva", "12345678901", "11999999999", "joao@oficina.local");
+        var customer = new Customer("Joao Silva", "52998224725", "11999999999", "joao@oficina.local");
         var vehicle = new Vehicle(customer.Id, "BRA2E19", "Volkswagen", "Gol", 2020);
         var serviceItem = new ServiceCatalogItem("Troca de oleo", "Troca de oleo e filtro", 180m, 1.5m);
         var part = new Part("Filtro de oleo", "FLT-001", 35m, 5);
@@ -107,7 +107,7 @@ public sealed class ServiceOrderIntegrationTests
         var response = await createHandler.Handle(
             new CreateServiceOrderCommand(
                 new CreateServiceOrderRequest(
-                    "123.456.789-01",
+                    "529.982.247-25",
                     new VehicleSnapshot("BRA2E19", "Volkswagen", "Gol", 2020),
                     ["Cliente relata barulho no motor."])),
             CancellationToken.None);
@@ -161,7 +161,7 @@ public sealed class ServiceOrderIntegrationTests
         await using var context = new OficinaDbContext(options);
         await context.Database.EnsureCreatedAsync();
 
-        var customer = new Customer("Joao Silva", "12345678901", "11999999999", "joao@oficina.local");
+        var customer = new Customer("Joao Silva", "52998224725", "11999999999", "joao@oficina.local");
         var vehicle = new Vehicle(customer.Id, "BRA2E19", "Volkswagen", "Gol", 2020);
         var serviceItem = new ServiceCatalogItem("Troca de oleo", "Troca de oleo e filtro", 180m, 1.5m);
         var part = new Part("Filtro de oleo", "FLT-001", 35m, 5);
@@ -181,7 +181,7 @@ public sealed class ServiceOrderIntegrationTests
         var response = await createHandler.Handle(
             new CreateServiceOrderCommand(
                 new CreateServiceOrderRequest(
-                    "123.456.789-01",
+                    "529.982.247-25",
                     new VehicleSnapshot("BRA2E19", "Volkswagen", "Gol", 2020),
                     ["Cliente relata vazamento de oleo."])),
             CancellationToken.None);
@@ -223,7 +223,7 @@ public sealed class ServiceOrderIntegrationTests
     public async Task DeveAdicionarItensAdicionaisESepararUltimaAprovacao()
     {
         await using var database = await TestDatabase.CreateAsync();
-        var customer = new Customer("Joao Silva", "12345678901", "11999999999", "joao@oficina.local");
+        var customer = new Customer("Joao Silva", "52998224725", "11999999999", "joao@oficina.local");
         var vehicle = new Vehicle(customer.Id, "BRA2E19", "Volkswagen", "Gol", 2020);
         var initialService = new ServiceCatalogItem("Troca de oleo", "Troca de oleo e filtro", 180m, 1.5m);
         var additionalService = new ServiceCatalogItem("Alinhamento", "Alinhamento completo", 120m, 1m);
@@ -280,7 +280,7 @@ public sealed class ServiceOrderIntegrationTests
     public async Task DeveConsultarOrdemPorIdListaEConsultaPublica()
     {
         await using var database = await TestDatabase.CreateAsync();
-        var customer = new Customer("Joao Silva", "12345678901", "11999999999", "joao@oficina.local");
+        var customer = new Customer("Joao Silva", "52998224725", "11999999999", "joao@oficina.local");
         var vehicle = new Vehicle(customer.Id, "BRA2E19", "Volkswagen", "Gol", 2020);
         var order = new ServiceOrder(customer.Id, vehicle.Id, ["Cliente relata barulho."]);
 
@@ -294,11 +294,11 @@ public sealed class ServiceOrderIntegrationTests
         var all = await new GetAllServiceOrdersQueryHandler(repository).Handle(new GetAllServiceOrdersQuery(), CancellationToken.None);
         var byId = await new GetServiceOrderByIdQueryHandler(repository).Handle(new GetServiceOrderByIdQuery(order.Id), CancellationToken.None);
         var publicOrder = await new GetPublicServiceOrderQueryHandler(repository).Handle(
-            new GetPublicServiceOrderQuery(order.Number, "123.456.789-01"),
+            new GetPublicServiceOrderQuery(order.Number, "529.982.247-25"),
             CancellationToken.None);
         var missingById = await new GetServiceOrderByIdQueryHandler(repository).Handle(new GetServiceOrderByIdQuery(Guid.NewGuid()), CancellationToken.None);
         var missingPublic = await new GetPublicServiceOrderQueryHandler(repository).Handle(
-            new GetPublicServiceOrderQuery("OS-000", "12345678901"),
+            new GetPublicServiceOrderQuery("OS-000", "52998224725"),
             CancellationToken.None);
 
         Assert.Single(all);
@@ -313,7 +313,7 @@ public sealed class ServiceOrderIntegrationTests
     public async Task DeveIniciarDiagnosticoFinalizarEEntregar()
     {
         await using var database = await TestDatabase.CreateAsync();
-        var customer = new Customer("Joao Silva", "12345678901", "11999999999", "joao@oficina.local");
+        var customer = new Customer("Joao Silva", "52998224725", "11999999999", "joao@oficina.local");
         var vehicle = new Vehicle(customer.Id, "BRA2E19", "Volkswagen", "Gol", 2020);
         var serviceItem = new ServiceCatalogItem("Troca de oleo", "Troca de oleo e filtro", 180m, 1.5m);
         var order = new ServiceOrder(customer.Id, vehicle.Id, ["Cliente relata vazamento."]);
@@ -372,4 +372,3 @@ public sealed class ServiceOrderIntegrationTests
         Assert.Null(timeline);
     }
 }
-

@@ -18,7 +18,7 @@ public sealed class ResourceControllerTests
     [Fact]
     public async Task CustomersControllerDeveRetornarResultadosEsperados()
     {
-        var customer = new Customer("Joao", "12345678901", "11999999999", "joao@oficina.local");
+        var customer = new Customer("Joao", "52998224725", "11999999999", "joao@oficina.local");
         var controller = new CustomersController(new FakeMediator(request => request switch
         {
             GetAllCustomersQuery => new List<Customer> { customer },
@@ -31,8 +31,8 @@ public sealed class ResourceControllerTests
 
         Assert.IsType<OkObjectResult>(await controller.GetAll(CancellationToken.None));
         Assert.IsType<OkObjectResult>(await controller.GetById(customer.Id, CancellationToken.None));
-        Assert.IsType<CreatedAtActionResult>(await controller.Create(new CustomerRequest("Joao", "12345678901", "11999999999", "joao@oficina.local"), CancellationToken.None));
-        Assert.IsType<OkObjectResult>(await controller.Update(customer.Id, new CustomerRequest("Joao", "12345678901", "11999999999", "joao@oficina.local"), CancellationToken.None));
+        Assert.IsType<CreatedAtActionResult>(await controller.Create(new CustomerRequest("Joao", "52998224725", "11999999999", "joao@oficina.local"), CancellationToken.None));
+        Assert.IsType<OkObjectResult>(await controller.Update(customer.Id, new CustomerRequest("Joao", "52998224725", "11999999999", "joao@oficina.local"), CancellationToken.None));
         Assert.IsType<NoContentResult>(await controller.Delete(customer.Id, CancellationToken.None));
     }
 
@@ -83,12 +83,13 @@ public sealed class ResourceControllerTests
     {
         var customerId = Guid.NewGuid();
         var vehicle = new Vehicle(customerId, "BRA2E19", "Volkswagen", "Gol", 2020);
+        var vehicleResponse = new VehicleResponse(vehicle.Id, customerId, vehicle.Plate, vehicle.Brand, vehicle.Model, vehicle.Year, null);
         var controller = new VehiclesController(new FakeMediator(request => request switch
         {
-            GetAllVehiclesQuery => new List<Vehicle> { vehicle },
-            GetVehicleByIdQuery => vehicle,
-            CreateVehicleCommand => vehicle,
-            UpdateVehicleCommand => vehicle,
+            GetAllVehiclesQuery => new List<VehicleResponse> { vehicleResponse },
+            GetVehicleByIdQuery => vehicleResponse,
+            CreateVehicleCommand => vehicleResponse,
+            UpdateVehicleCommand => vehicleResponse,
             DeleteVehicleCommand => false,
             _ => null
         }));

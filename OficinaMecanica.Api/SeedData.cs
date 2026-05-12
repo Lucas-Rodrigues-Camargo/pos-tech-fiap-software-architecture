@@ -54,7 +54,7 @@ public static class SeedData
             return;
         }
 
-        var customer = new Customer("Joao Silva", "12345678901", "11999999999", "joao@oficina.local");
+        var customer = new Customer("Joao Silva", "52998224725", "11999999999", "joao@oficina.local");
         var vehicle = new Vehicle(customer.Id, "BRA2E19", "Volkswagen", "Gol", 2020);
         var oilChange = new ServiceCatalogItem("Troca de oleo", "Troca de oleo e filtro", 180m, 1.5m);
         var alignment = new ServiceCatalogItem("Alinhamento", "Alinhamento e balanceamento", 120m, 1m);

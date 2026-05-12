@@ -30,7 +30,6 @@ public sealed class UpdatePartCommandValidator : AbstractValidator<UpdatePartCom
     {
         RuleFor(x => x.Id).NotEmpty();
         RuleFor(x => x.Request.Name).NotEmpty();
-        RuleFor(x => x.Request.Sku).NotEmpty();
         RuleFor(x => x.Request.UnitPrice).GreaterThanOrEqualTo(0);
         RuleFor(x => x.Request.StockQuantity).GreaterThanOrEqualTo(0);
     }
@@ -52,7 +51,13 @@ public sealed class CreatePartCommandHandler(IPartRepository repository, IOficin
 {
     public async Task<Part> Handle(CreatePartCommand request, CancellationToken cancellationToken)
     {
-        var part = new Part(request.Request.Name, request.Request.Sku, request.Request.UnitPrice, request.Request.StockQuantity);
+        var normalizedSku = PartSku.NormalizeRequired(request.Request.Sku);
+        if (await repository.ExistsBySkuAsync(normalizedSku, cancellationToken))
+        {
+            throw new OficinaMecanica.Application.Common.ValidationException("Ja existe peca cadastrada com este SKU.");
+        }
+
+        var part = new Part(request.Request.Name, normalizedSku, request.Request.UnitPrice, request.Request.StockQuantity);
         repository.Add(part);
         await context.SaveChangesAsync(cancellationToken);
         return part;
@@ -69,7 +74,14 @@ public sealed class UpdatePartCommandHandler(IPartRepository repository, IOficin
             return null;
         }
 
-        part.Update(request.Request.Name, request.Request.Sku, request.Request.UnitPrice, request.Request.StockQuantity);
+        var normalizedSku = PartSku.NormalizeOptional(request.Request.Sku) ?? part.Sku;
+        var skuChanged = !string.Equals(part.Sku, normalizedSku, StringComparison.Ordinal);
+        if (skuChanged && await repository.ExistsBySkuExcludingIdAsync(request.Id, normalizedSku, cancellationToken))
+        {
+            throw new OficinaMecanica.Application.Common.ValidationException("Ja existe peca cadastrada com este SKU.");
+        }
+
+        part.Update(request.Request.Name, normalizedSku, request.Request.UnitPrice, request.Request.StockQuantity);
         await context.SaveChangesAsync(cancellationToken);
         return part;
     }
@@ -89,4 +101,12 @@ public sealed class DeletePartCommandHandler(IPartRepository repository, IOficin
         await context.SaveChangesAsync(cancellationToken);
         return true;
     }
+}
+
+internal static class PartSku
+{
+    public static string NormalizeRequired(string? sku) => sku!.Trim().ToUpperInvariant();
+
+    public static string? NormalizeOptional(string? sku)
+        => string.IsNullOrWhiteSpace(sku) ? null : sku.Trim().ToUpperInvariant();
 }
