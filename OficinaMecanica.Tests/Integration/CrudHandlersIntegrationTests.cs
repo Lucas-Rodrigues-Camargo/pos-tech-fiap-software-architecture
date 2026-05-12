@@ -23,15 +23,15 @@ public sealed class CrudHandlersIntegrationTests
         var update = new UpdateCustomerCommandHandler(repository, database.Context);
 
         var customer = await create.Handle(
-            new CreateCustomerCommand(new CustomerRequest("Maria Silva", "123.456.789-01", "11999999999", "maria@oficina.local")),
+            new CreateCustomerCommand(new CustomerRequest("Maria Silva", "529.982.247-25", "11999999999", "maria@oficina.local")),
             CancellationToken.None);
 
         var duplicate = await Assert.ThrowsAsync<ValidationException>(() => create.Handle(
-            new CreateCustomerCommand(new CustomerRequest("Outra Maria", "12345678901", "11888888888", "outra@oficina.local")),
+            new CreateCustomerCommand(new CustomerRequest("Outra Maria", "52998224725", "11888888888", "outra@oficina.local")),
             CancellationToken.None));
 
         var updated = await update.Handle(
-            new UpdateCustomerCommand(customer.Id, new CustomerRequest("Maria Souza", "12345678901", "11777777777", "maria.souza@oficina.local")),
+            new UpdateCustomerCommand(customer.Id, new CustomerRequest("Maria Souza", "52998224725", "11777777777", "maria.souza@oficina.local")),
             CancellationToken.None);
 
         var listed = await new GetAllCustomersQueryHandler(repository).Handle(new GetAllCustomersQuery(), CancellationToken.None);
@@ -39,7 +39,7 @@ public sealed class CrudHandlersIntegrationTests
         var deleted = await new DeleteCustomerCommandHandler(repository, database.Context).Handle(new DeleteCustomerCommand(customer.Id), CancellationToken.None);
         var missingDelete = await new DeleteCustomerCommandHandler(repository, database.Context).Handle(new DeleteCustomerCommand(Guid.NewGuid()), CancellationToken.None);
 
-        Assert.Contains("Já existe cliente", duplicate.Message);
+        Assert.Contains("JÃ¡ existe cliente", duplicate.Message);
         Assert.NotNull(updated);
         Assert.Equal("Maria Souza", updated!.Name);
         Assert.Single(listed);
@@ -58,6 +58,26 @@ public sealed class CrudHandlersIntegrationTests
             new CreatePartCommand(new PartRequest("Filtro de ar", "flt-002", 42m, 10)),
             CancellationToken.None);
 
+        var duplicateCreate = await Assert.ThrowsAsync<ValidationException>(() => new CreatePartCommandHandler(repository, database.Context).Handle(
+            new CreatePartCommand(new PartRequest("Filtro duplicado", "FLT-002", 45m, 3)),
+            CancellationToken.None));
+
+        var otherPart = await new CreatePartCommandHandler(repository, database.Context).Handle(
+            new CreatePartCommand(new PartRequest("Pastilha de freio", "brk-001", 90m, 4)),
+            CancellationToken.None);
+
+        var updatedWithoutSku = await new UpdatePartCommandHandler(repository, database.Context).Handle(
+            new UpdatePartCommand(part.Id, new PartRequest("Filtro de ar esportivo", null, 50m, 8)),
+            CancellationToken.None);
+
+        var updatedWithSameSku = await new UpdatePartCommandHandler(repository, database.Context).Handle(
+            new UpdatePartCommand(part.Id, new PartRequest("Filtro de ar esportivo", "flt-002", 50m, 8)),
+            CancellationToken.None);
+
+        var duplicateUpdate = await Assert.ThrowsAsync<ValidationException>(() => new UpdatePartCommandHandler(repository, database.Context).Handle(
+            new UpdatePartCommand(part.Id, new PartRequest("Filtro de ar esportivo", otherPart.Sku, 50m, 8)),
+            CancellationToken.None));
+
         var updated = await new UpdatePartCommandHandler(repository, database.Context).Handle(
             new UpdatePartCommand(part.Id, new PartRequest("Filtro de ar esportivo", "flt-003", 50m, 8)),
             CancellationToken.None);
@@ -69,9 +89,15 @@ public sealed class CrudHandlersIntegrationTests
             new UpdatePartCommand(Guid.NewGuid(), new PartRequest("Nao existe", "X", 1m, 1)),
             CancellationToken.None);
 
+        Assert.Contains("SKU", duplicateCreate.Message);
+        Assert.Contains("SKU", duplicateUpdate.Message);
+        Assert.NotNull(updatedWithoutSku);
+        Assert.Equal("FLT-002", updatedWithoutSku!.Sku);
+        Assert.NotNull(updatedWithSameSku);
+        Assert.Equal("FLT-002", updatedWithSameSku!.Sku);
         Assert.NotNull(updated);
         Assert.Equal("FLT-003", updated!.Sku);
-        Assert.Single(all);
+        Assert.Equal(2, all.Count);
         Assert.NotNull(byId);
         Assert.True(removed);
         Assert.Null(missingUpdate);
@@ -108,7 +134,7 @@ public sealed class CrudHandlersIntegrationTests
     public async Task DeveCriarAtualizarListarERemoverVeiculo()
     {
         await using var database = await TestDatabase.CreateAsync();
-        var customer = new Customer("Joao Silva", "12345678901", "11999999999", "joao@oficina.local");
+        var customer = new Customer("Joao Silva", "52998224725", "11999999999", "joao@oficina.local");
         database.Context.Customers.Add(customer);
         await database.Context.SaveChangesAsync();
 
@@ -136,10 +162,14 @@ public sealed class CrudHandlersIntegrationTests
 
         Assert.Contains("placa", duplicate.Message, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("Cliente", missingCustomer.Message);
+        Assert.Equal(customer.Id, vehicle.CustomerId);
+        Assert.Equal(customer.Name, vehicle.Customer?.Name);
         Assert.NotNull(updated);
         Assert.Equal("BRA2E20", updated!.Plate);
         Assert.Single(all);
         Assert.NotNull(byId);
+        Assert.Equal(customer.Id, byId!.CustomerId);
+        Assert.Equal(customer.Name, byId.Customer?.Name);
         Assert.True(removed);
     }
 }

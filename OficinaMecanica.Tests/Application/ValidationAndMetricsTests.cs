@@ -24,8 +24,12 @@ namespace OficinaMecanica.Tests.Application;
 public sealed class ValidationAndMetricsTests
 {
     [Theory]
-    [InlineData("123.456.789-01", "12345678901", true)]
-    [InlineData("12.345.678/0001-90", "12345678000190", true)]
+    [InlineData("529.982.247-25", "52998224725", true)]
+    [InlineData("11.222.333/0001-81", "11222333000181", true)]
+    [InlineData("529.982.247-24", "52998224724", false)]
+    [InlineData("11.222.333/0001-80", "11222333000180", false)]
+    [InlineData("111.111.111-11", "11111111111", false)]
+    [InlineData("11.111.111/1111-11", "11111111111111", false)]
     [InlineData("abc", "ABC", false)]
     public void DeveNormalizarEValidarDocumentos(string input, string normalized, bool valid)
     {
@@ -111,9 +115,11 @@ public sealed class ValidationAndMetricsTests
         Assert.True(new CreateVehicleCommandValidator()
             .Validate(new CreateVehicleCommand(new VehicleRequest(Guid.NewGuid(), "BRA2E19", "Volkswagen", "Gol", 2020))).IsValid);
         Assert.True(new UpdateCustomerCommandValidator()
-            .Validate(new UpdateCustomerCommand(Guid.NewGuid(), new CustomerRequest("Maria", "12345678901", "11999999999", "maria@oficina.local"))).IsValid);
+            .Validate(new UpdateCustomerCommand(Guid.NewGuid(), new CustomerRequest("Maria", "52998224725", "11999999999", "maria@oficina.local"))).IsValid);
         Assert.True(new UpdateServiceCommandValidator()
             .Validate(new UpdateServiceCommand(Guid.NewGuid(), new ServiceCatalogRequest("Alinhamento", "Completo", 120m, 1m))).IsValid);
+        Assert.True(new UpdatePartCommandValidator()
+            .Validate(new UpdatePartCommand(Guid.NewGuid(), new PartRequest("Filtro", null, 10m, 5))).IsValid);
         Assert.True(new UpdateServiceOrderBudgetCommandValidator()
             .Validate(new UpdateServiceOrderBudgetCommand(Guid.NewGuid(), new UpdateServiceOrderBudgetRequest([Guid.NewGuid()], [new RequestedPart(Guid.NewGuid(), 1)]))).IsValid);
         Assert.True(new StartServiceOrderDiagnosisCommandValidator()
@@ -123,14 +129,14 @@ public sealed class ValidationAndMetricsTests
         Assert.True(new CancelServiceOrderCommandValidator()
             .Validate(new CancelServiceOrderCommand(Guid.NewGuid())).IsValid);
         Assert.True(new GetPublicServiceOrderQueryValidator()
-            .Validate(new GetPublicServiceOrderQuery("OS-123", "12345678901")).IsValid);
+            .Validate(new GetPublicServiceOrderQuery("OS-123", "52998224725")).IsValid);
     }
 
     [Fact]
     public async Task DeveGerarMetricasPorOrdem()
     {
         await using var database = await Integration.TestDatabase.CreateAsync();
-        var customer = new Customer("Joao Silva", "12345678901", "11999999999", "joao@oficina.local");
+        var customer = new Customer("Joao Silva", "52998224725", "11999999999", "joao@oficina.local");
         var vehicle = new Vehicle(customer.Id, "BRA2E19", "Volkswagen", "Gol", 2020);
         var service = new ServiceCatalogItem("Alinhamento", "Alinhamento completo", 120m, 1m);
         var order = new ServiceOrder(customer.Id, vehicle.Id, ["Cliente relata volante torto."]);

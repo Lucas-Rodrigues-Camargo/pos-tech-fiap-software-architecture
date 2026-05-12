@@ -594,7 +594,7 @@
                                                               },
                                                       "body":  {
                                                                    "mode":  "raw",
-                                                                   "raw":  "{\n  \"name\": \"Filtro de oleo premium\",\n  \"sku\": \"FLT-OIL-001\",\n  \"unitPrice\": 59.90,\n  \"stockQuantity\": 25\n}",
+                                                                   "raw":  "{\n  \"name\": \"Filtro de oleo premium\",\n  \"unitPrice\": 59.90,\n  \"stockQuantity\": 25\n}",
                                                                    "options":  {
                                                                                    "raw":  {
                                                                                                "language":  "json"

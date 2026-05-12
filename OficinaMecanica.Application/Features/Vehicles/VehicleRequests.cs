@@ -8,10 +8,10 @@ using OficinaMecanica.Domain.Entities;
 
 namespace OficinaMecanica.Application.Features.Vehicles;
 
-public sealed record GetAllVehiclesQuery : IRequest<IReadOnlyCollection<Vehicle>>;
-public sealed record GetVehicleByIdQuery(Guid Id) : IRequest<Vehicle?>;
-public sealed record CreateVehicleCommand(VehicleRequest Request) : IRequest<Vehicle>;
-public sealed record UpdateVehicleCommand(Guid Id, VehicleRequest Request) : IRequest<Vehicle?>;
+public sealed record GetAllVehiclesQuery : IRequest<IReadOnlyCollection<VehicleResponse>>;
+public sealed record GetVehicleByIdQuery(Guid Id) : IRequest<VehicleResponse?>;
+public sealed record CreateVehicleCommand(VehicleRequest Request) : IRequest<VehicleResponse>;
+public sealed record UpdateVehicleCommand(Guid Id, VehicleRequest Request) : IRequest<VehicleResponse?>;
 public sealed record DeleteVehicleCommand(Guid Id) : IRequest<bool>;
 
 public sealed class CreateVehicleCommandValidator : AbstractValidator<CreateVehicleCommand>
@@ -19,7 +19,7 @@ public sealed class CreateVehicleCommandValidator : AbstractValidator<CreateVehi
     public CreateVehicleCommandValidator()
     {
         RuleFor(x => x.Request.CustomerId).NotEmpty();
-        RuleFor(x => x.Request.Plate).Must(DocumentValidator.IsValidPlate).WithMessage("Placa inválida.");
+        RuleFor(x => x.Request.Plate).Must(DocumentValidator.IsValidPlate).WithMessage("Placa invalida.");
         RuleFor(x => x.Request.Brand).NotEmpty();
         RuleFor(x => x.Request.Model).NotEmpty();
         RuleFor(x => x.Request.Year).InclusiveBetween(1900, 3000);
@@ -32,7 +32,7 @@ public sealed class UpdateVehicleCommandValidator : AbstractValidator<UpdateVehi
     {
         RuleFor(x => x.Id).NotEmpty();
         RuleFor(x => x.Request.CustomerId).NotEmpty();
-        RuleFor(x => x.Request.Plate).Must(DocumentValidator.IsValidPlate).WithMessage("Placa inválida.");
+        RuleFor(x => x.Request.Plate).Must(DocumentValidator.IsValidPlate).WithMessage("Placa invalida.");
         RuleFor(x => x.Request.Brand).NotEmpty();
         RuleFor(x => x.Request.Model).NotEmpty();
         RuleFor(x => x.Request.Year).InclusiveBetween(1900, 3000);
@@ -40,46 +40,49 @@ public sealed class UpdateVehicleCommandValidator : AbstractValidator<UpdateVehi
 }
 
 public sealed class GetAllVehiclesQueryHandler(IVehicleRepository repository)
-    : IRequestHandler<GetAllVehiclesQuery, IReadOnlyCollection<Vehicle>>
+    : IRequestHandler<GetAllVehiclesQuery, IReadOnlyCollection<VehicleResponse>>
 {
-    public async Task<IReadOnlyCollection<Vehicle>> Handle(GetAllVehiclesQuery request, CancellationToken cancellationToken)
-        => await repository.GetAllWithCustomerAsync(cancellationToken);
+    public async Task<IReadOnlyCollection<VehicleResponse>> Handle(GetAllVehiclesQuery request, CancellationToken cancellationToken)
+        => [.. (await repository.GetAllWithCustomerAsync(cancellationToken)).Select(VehicleMapper.ToResponse)];
 }
 
 public sealed class GetVehicleByIdQueryHandler(IVehicleRepository repository)
-    : IRequestHandler<GetVehicleByIdQuery, Vehicle?>
+    : IRequestHandler<GetVehicleByIdQuery, VehicleResponse?>
 {
-    public async Task<Vehicle?> Handle(GetVehicleByIdQuery request, CancellationToken cancellationToken)
-        => await repository.GetByIdWithCustomerAsync(request.Id, cancellationToken);
+    public async Task<VehicleResponse?> Handle(GetVehicleByIdQuery request, CancellationToken cancellationToken)
+        => (await repository.GetByIdWithCustomerAsync(request.Id, cancellationToken)) is { } vehicle
+            ? VehicleMapper.ToResponse(vehicle)
+            : null;
 }
 
 public sealed class CreateVehicleCommandHandler(IVehicleRepository repository, ICustomerRepository customerRepository, IOficinaDbContext context)
-    : IRequestHandler<CreateVehicleCommand, Vehicle>
+    : IRequestHandler<CreateVehicleCommand, VehicleResponse>
 {
-    public async Task<Vehicle> Handle(CreateVehicleCommand request, CancellationToken cancellationToken)
+    public async Task<VehicleResponse> Handle(CreateVehicleCommand request, CancellationToken cancellationToken)
     {
-        if (await customerRepository.GetByIdAsync(request.Request.CustomerId, cancellationToken) is null)
+        var customer = await customerRepository.GetByIdAsync(request.Request.CustomerId, cancellationToken);
+        if (customer is null)
         {
-            throw new OficinaMecanica.Application.Common.ValidationException("Cliente não encontrado para o veículo informado.");
+            throw new OficinaMecanica.Application.Common.ValidationException("Cliente nao encontrado para o veiculo informado.");
         }
 
         var normalizedPlate = DocumentValidator.Normalize(request.Request.Plate);
         if (await repository.ExistsByPlateAsync(normalizedPlate, cancellationToken))
         {
-            throw new OficinaMecanica.Application.Common.ValidationException("Já existe veículo cadastrado com esta placa.");
+            throw new OficinaMecanica.Application.Common.ValidationException("Ja existe veiculo cadastrado com esta placa.");
         }
 
         var vehicle = new Vehicle(request.Request.CustomerId, normalizedPlate, request.Request.Brand, request.Request.Model, request.Request.Year);
         repository.Add(vehicle);
         await context.SaveChangesAsync(cancellationToken);
-        return vehicle;
+        return VehicleMapper.ToResponse(vehicle, customer);
     }
 }
 
 public sealed class UpdateVehicleCommandHandler(IVehicleRepository repository, IOficinaDbContext context)
-    : IRequestHandler<UpdateVehicleCommand, Vehicle?>
+    : IRequestHandler<UpdateVehicleCommand, VehicleResponse?>
 {
-    public async Task<Vehicle?> Handle(UpdateVehicleCommand request, CancellationToken cancellationToken)
+    public async Task<VehicleResponse?> Handle(UpdateVehicleCommand request, CancellationToken cancellationToken)
     {
         var vehicle = await repository.GetByIdAsync(request.Id, cancellationToken);
         if (vehicle is null)
@@ -90,12 +93,12 @@ public sealed class UpdateVehicleCommandHandler(IVehicleRepository repository, I
         var normalizedPlate = DocumentValidator.Normalize(request.Request.Plate);
         if (await repository.ExistsByPlateExcludingIdAsync(request.Id, normalizedPlate, cancellationToken))
         {
-            throw new OficinaMecanica.Application.Common.ValidationException("Já existe veículo cadastrado com esta placa.");
+            throw new OficinaMecanica.Application.Common.ValidationException("Ja existe veiculo cadastrado com esta placa.");
         }
 
         vehicle.Update(normalizedPlate, request.Request.Brand, request.Request.Model, request.Request.Year);
         await context.SaveChangesAsync(cancellationToken);
-        return vehicle;
+        return VehicleMapper.ToResponse(vehicle);
     }
 }
 
@@ -115,3 +118,27 @@ public sealed class DeleteVehicleCommandHandler(IVehicleRepository repository, I
         return true;
     }
 }
+
+internal static class VehicleMapper
+{
+    public static VehicleResponse ToResponse(Vehicle vehicle)
+        => ToResponse(vehicle, vehicle.Customer);
+
+    public static VehicleResponse ToResponse(Vehicle vehicle, Customer? customer)
+        => new(
+            vehicle.Id,
+            vehicle.CustomerId,
+            vehicle.Plate,
+            vehicle.Brand,
+            vehicle.Model,
+            vehicle.Year,
+            customer is null
+                ? null
+                : new VehicleCustomerResponse(
+                    customer.Id,
+                    customer.Name,
+                    customer.Document,
+                    customer.Phone,
+                    customer.Email));
+}
+

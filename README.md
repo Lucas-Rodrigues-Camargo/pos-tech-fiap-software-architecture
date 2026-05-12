@@ -255,7 +255,7 @@ As credenciais ficam persistidas no banco via Identity, com senha armazenada em 
 
 ```json
 {
-  "customerDocument": "12345678901",
+  "customerDocument": "52998224725",
   "vehicle": {
     "plate": "BRA2E19",
     "brand": "Volkswagen",
