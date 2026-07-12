@@ -582,6 +582,56 @@ A API fica em `http://localhost:8080` e o Swagger em `http://localhost:8080/swag
 
 ## Provisionamento da AWS com Terraform
 
+### Passo a passo atualizado na AWS
+
+O ambiente de entrega usa AWS em `us-east-1`, com Terraform criando VPC, EKS, ECR e RDS PostgreSQL. A aplicacao e publicada no EKS e exposta por um `Service` Kubernetes do tipo `LoadBalancer`.
+
+Antes de executar Terraform ou `kubectl`, valide o AWS CLI:
+
+```powershell
+aws --version
+```
+
+Se o comando `aws` nao for reconhecido no Windows, adicione o AWS CLI ao `PATH` do terminal atual:
+
+```powershell
+$env:Path = "C:\Program Files\Amazon\AWSCLIV2;$env:Path"
+aws --version
+```
+
+Para deixar permanente no `PATH` do usuario:
+
+```powershell
+$AwsCliPath = "C:\Program Files\Amazon\AWSCLIV2"
+$UserPath = [Environment]::GetEnvironmentVariable("Path", "User")
+$entries = $UserPath -split ';' | Where-Object { $_ }
+
+if ($entries -notcontains $AwsCliPath) {
+  [Environment]::SetEnvironmentVariable("Path", (($entries + $AwsCliPath) -join ';'), "User")
+}
+```
+
+Depois feche e abra novamente o PowerShell, Windows Terminal ou VS Code.
+
+Configure as credenciais:
+
+```powershell
+aws configure
+```
+
+Use:
+
+- `AWS Access Key ID`: access key criada no IAM.
+- `AWS Secret Access Key`: secret da mesma access key.
+- `Default region name`: `us-east-1`.
+- `Default output format`: `json`.
+
+Valide a identidade:
+
+```powershell
+aws sts get-caller-identity
+```
+
 Requisitos: conta AWS, AWS CLI, Terraform e `kubectl`. Configure uma identidade AWS com permissões para VPC, EC2, IAM, EKS, ECR e RDS.
 
 ```powershell
@@ -609,6 +659,8 @@ cd infra
 terraform destroy
 ```
 
+Observacao: nao existe pausa completa para EKS, Load Balancer e RDS via Terraform. Para parar a cobranca dos recursos provisionados, destrua a infraestrutura com `terraform destroy` e recrie depois com `terraform apply`. A recriacao pode levar varios minutos novamente.
+
 ## CI/CD com GitHub Actions, ECR e EKS
 
 O job `build-and-test` compila e testa a solução. Em pushes para `main`, `publish-and-deploy` publica no ECR, consulta o endpoint do RDS, aplica Secrets e manifestos no EKS e aguarda o rollout. Não é necessário runner `self-hosted`.
@@ -622,7 +674,54 @@ No repositório GitHub, configure os seguintes Actions Secrets:
 - `SMTP_USERNAME`
 - `SMTP_PASSWORD`
 
-Use em `POSTGRES_PASSWORD` exatamente o mesmo valor aplicado em `database_password` pelo Terraform. Após o deploy, obtenha o endereço público com `kubectl get service oficina-api -n oficina-mecanica` e acesse `http://ENDERECO/swagger`.
+As secrets SMTP sao usadas pelo envio de e-mail da aplicacao:
+
+- `SMTP_USERNAME`: usuario SMTP do sandbox Mailtrap.
+- `SMTP_PASSWORD`: senha SMTP do sandbox Mailtrap.
+
+O workflow executa build, testes, build da imagem Docker, push para o Amazon ECR, configuracao do acesso ao EKS, criacao dos Secrets Kubernetes, aplicacao de ConfigMap, Deployment, Service e HPA, e rollout da API.
+
+Depois de configurar as secrets no GitHub, execute o deploy por push na branch `main` ou manualmente em `Actions > CI/CD AWS > Run workflow`.
+
+Para acompanhar o deploy pelo terminal:
+
+```powershell
+kubectl get pods -n oficina-mecanica
+kubectl get deploy -n oficina-mecanica
+kubectl get svc -n oficina-mecanica
+```
+
+Se o `kubectl` retornar `exec: executable aws not found`, o `kubectl` nao encontrou o AWS CLI no `PATH`. Rode:
+
+```powershell
+$env:Path = "C:\Program Files\Amazon\AWSCLIV2;$env:Path"
+aws eks update-kubeconfig --region us-east-1 --name oficina-mecanica-eks
+kubectl get nodes
+```
+
+Para obter o endereco publico da API:
+
+```powershell
+kubectl get svc oficina-api -n oficina-mecanica -o wide
+```
+
+Exemplo:
+
+```text
+NAME          TYPE           EXTERNAL-IP                                      PORT(S)
+oficina-api   LoadBalancer   xxxxx.us-east-1.elb.amazonaws.com                80:32364/TCP
+```
+
+Nesse caso, acesse:
+
+```text
+http://xxxxx.us-east-1.elb.amazonaws.com/health
+http://xxxxx.us-east-1.elb.amazonaws.com/swagger
+```
+
+O trecho `80:32364/TCP` significa que a porta publica e `80`; a porta `32364` e interna do Kubernetes e nao precisa ser usada no navegador.
+
+Use em `POSTGRES_PASSWORD` exatamente o mesmo valor aplicado em `database_password` pelo Terraform.
 
 ## Notificações e consulta de status
 
