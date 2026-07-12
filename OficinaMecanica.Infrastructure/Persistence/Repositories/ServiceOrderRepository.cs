@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using OficinaMecanica.Application.Abstractions.Repositories;
 using OficinaMecanica.Domain.Entities;
+using OficinaMecanica.Domain.Enums;
 
 namespace OficinaMecanica.Infrastructure.Persistence.Repositories;
 
@@ -12,7 +13,15 @@ public sealed class ServiceOrderRepository(OficinaDbContext context) : IServiceO
             .Include(x => x.Vehicle)
             .Include(x => x.Services)
             .Include(x => x.Parts)
-            .OrderByDescending(x => x.CreatedAtUtc)
+            .Where(x => x.Status != ServiceOrderStatus.Finished
+                && x.Status != ServiceOrderStatus.Delivered
+                && x.Status != ServiceOrderStatus.Reproved
+                && x.Status != ServiceOrderStatus.Canceled)
+            .OrderBy(x => x.Status == ServiceOrderStatus.InExecution ? 0
+                : x.Status == ServiceOrderStatus.WaitingApproval ? 1
+                : x.Status == ServiceOrderStatus.InDiagnosis ? 2
+                : 3)
+            .ThenBy(x => x.CreatedAtUtc)
             .ToListAsync(cancellationToken);
 
     public async Task<ServiceOrder?> GetByIdWithDetailsAsync(Guid id, CancellationToken cancellationToken)

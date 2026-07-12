@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using OficinaMecanica.Api.Controllers;
 using OficinaMecanica.Application.Contracts.ServiceOrders;
-using OficinaMecanica.Application.Features.ServiceOrders;
+using OficinaMecanica.Application.UseCases.ServiceOrders;
 using OficinaMecanica.Domain.Enums;
 
 namespace OficinaMecanica.Tests.Api;

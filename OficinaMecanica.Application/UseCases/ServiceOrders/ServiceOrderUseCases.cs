@@ -1,4 +1,4 @@
-﻿using FluentValidation;
+using FluentValidation;
 using MediatR;
 using OficinaMecanica.Application.Abstractions;
 using OficinaMecanica.Application.Abstractions.Repositories;
@@ -7,7 +7,7 @@ using OficinaMecanica.Application.Contracts.ServiceOrders;
 using OficinaMecanica.Domain.Entities;
 using OficinaMecanica.Domain.Enums;
 
-namespace OficinaMecanica.Application.Features.ServiceOrders;
+namespace OficinaMecanica.Application.UseCases.ServiceOrders;
 
 public sealed record GetAllServiceOrdersQuery : IRequest<IReadOnlyCollection<ServiceOrderResponse>>;
 public sealed record GetServiceOrderByIdQuery(Guid Id) : IRequest<ServiceOrderResponse?>;
@@ -21,6 +21,7 @@ public sealed record ChangeServiceOrderStatusCommand(Guid Id, ServiceOrderStatus
 public sealed record GetServiceOrderMetricsQuery : IRequest<ExecutionMetricsResponse>;
 public sealed record GetServiceOrderTimelineMetricsQuery(Guid Id) : IRequest<ServiceOrderTimelineMetricsResponse?>;
 public sealed record GetPublicServiceOrderQuery(string Number, string Document) : IRequest<ServiceOrderResponse?>;
+public sealed record SendServiceOrderStatusEmailCommand(Guid Id) : IRequest<bool>;
 
 public sealed class CreateServiceOrderCommandValidator : AbstractValidator<CreateServiceOrderCommand>
 {
@@ -153,6 +154,27 @@ public sealed class GetServiceOrderByIdQueryHandler(IServiceOrderRepository repo
     }
 }
 
+public sealed class SendServiceOrderStatusEmailCommandHandler(
+    IServiceOrderRepository repository,
+    IEmailSender emailSender) : IRequestHandler<SendServiceOrderStatusEmailCommand, bool>
+{
+    public async Task<bool> Handle(SendServiceOrderStatusEmailCommand request, CancellationToken cancellationToken)
+    {
+        var order = await repository.GetByIdWithDetailsAsync(request.Id, cancellationToken);
+        if (order?.Customer is null)
+        {
+            return false;
+        }
+
+        await emailSender.SendAsync(
+            order.Customer.Email,
+            $"Atualização da ordem de serviço {order.Number}",
+            $"Olá, {order.Customer.Name}. A ordem de serviço {order.Number} está com o status {order.Status}.",
+            cancellationToken);
+        return true;
+    }
+}
+
 public sealed class GetPublicServiceOrderQueryHandler(IServiceOrderRepository repository)
     : IRequestHandler<GetPublicServiceOrderQuery, ServiceOrderResponse?>
 {
@@ -168,7 +190,7 @@ public sealed class CreateServiceOrderCommandHandler(
     ICustomerRepository customerRepository,
     IVehicleRepository vehicleRepository,
     IServiceOrderRepository serviceOrderRepository,
-    IOficinaDbContext context)
+    IUnitOfWork context)
     : IRequestHandler<CreateServiceOrderCommand, ServiceOrderResponse>
 {
     public async Task<ServiceOrderResponse> Handle(CreateServiceOrderCommand request, CancellationToken cancellationToken)
@@ -205,7 +227,7 @@ public sealed class UpdateServiceOrderBudgetCommandHandler(
     IServiceCatalogRepository serviceCatalogRepository,
     IPartRepository partRepository,
     IServiceOrderRepository serviceOrderRepository,
-    IOficinaDbContext context)
+    IUnitOfWork context)
     : IRequestHandler<UpdateServiceOrderBudgetCommand, ServiceOrderResponse?>
 {
     public async Task<ServiceOrderResponse?> Handle(UpdateServiceOrderBudgetCommand request, CancellationToken cancellationToken)
@@ -252,7 +274,7 @@ public sealed class AddServiceOrderAdditionalBudgetItemsCommandHandler(
     IServiceCatalogRepository serviceCatalogRepository,
     IPartRepository partRepository,
     IServiceOrderRepository serviceOrderRepository,
-    IOficinaDbContext context)
+    IUnitOfWork context)
     : IRequestHandler<AddServiceOrderAdditionalBudgetItemsCommand, ServiceOrderBudgetApprovalResponse?>
 {
     public async Task<ServiceOrderBudgetApprovalResponse?> Handle(AddServiceOrderAdditionalBudgetItemsCommand request, CancellationToken cancellationToken)
@@ -297,7 +319,7 @@ public sealed class AddServiceOrderAdditionalBudgetItemsCommandHandler(
     }
 }
 
-public sealed class StartServiceOrderDiagnosisCommandHandler(IServiceOrderRepository repository, IOficinaDbContext context)
+public sealed class StartServiceOrderDiagnosisCommandHandler(IServiceOrderRepository repository, IUnitOfWork context)
     : IRequestHandler<StartServiceOrderDiagnosisCommand, ServiceOrderResponse?>
 {
     public async Task<ServiceOrderResponse?> Handle(StartServiceOrderDiagnosisCommand request, CancellationToken cancellationToken)
@@ -315,7 +337,7 @@ public sealed class StartServiceOrderDiagnosisCommandHandler(IServiceOrderReposi
     }
 }
 
-public sealed class ChangeServiceOrderStatusCommandHandler(IServiceOrderRepository repository, IOficinaDbContext context)
+public sealed class ChangeServiceOrderStatusCommandHandler(IServiceOrderRepository repository, IUnitOfWork context)
     : IRequestHandler<ChangeServiceOrderStatusCommand, ServiceOrderResponse?>
 {
     public async Task<ServiceOrderResponse?> Handle(ChangeServiceOrderStatusCommand request, CancellationToken cancellationToken)
@@ -344,7 +366,7 @@ public sealed class ChangeServiceOrderStatusCommandHandler(IServiceOrderReposito
 public sealed class DecideServiceOrderApprovalCommandHandler(
     IPartRepository partRepository,
     IServiceOrderRepository serviceOrderRepository,
-    IOficinaDbContext context)
+    IUnitOfWork context)
     : IRequestHandler<DecideServiceOrderApprovalCommand, ServiceOrderResponse?>
 {
     public async Task<ServiceOrderResponse?> Handle(DecideServiceOrderApprovalCommand request, CancellationToken cancellationToken)
@@ -407,7 +429,7 @@ public sealed class DecideServiceOrderApprovalCommandHandler(
 public sealed class CancelServiceOrderCommandHandler(
     IPartRepository partRepository,
     IServiceOrderRepository serviceOrderRepository,
-    IOficinaDbContext context)
+    IUnitOfWork context)
     : IRequestHandler<CancelServiceOrderCommand, ServiceOrderResponse?>
 {
     public async Task<ServiceOrderResponse?> Handle(CancelServiceOrderCommand request, CancellationToken cancellationToken)

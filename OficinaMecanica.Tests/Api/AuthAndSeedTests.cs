@@ -4,7 +4,6 @@ using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using OficinaMecanica.Api;
 using OficinaMecanica.Api.Auth;
 using OficinaMecanica.Api.Controllers;
 using OficinaMecanica.Application.Abstractions.Repositories;
@@ -61,8 +60,9 @@ public sealed class AuthAndSeedTests
         var roles = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
         var configuration = scope.ServiceProvider.GetRequiredService<IConfiguration>();
 
-        await SeedData.InitializeAsync(context, users, roles, configuration);
-        await SeedData.InitializeAsync(context, users, roles, configuration);
+        var initializer = new DatabaseInitializer(context, users, roles, configuration);
+        await initializer.InitializeAsync();
+        await initializer.InitializeAsync();
 
         var admin = await users.FindByNameAsync("admin");
 

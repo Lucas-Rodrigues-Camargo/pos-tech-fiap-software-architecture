@@ -1,8 +1,8 @@
-﻿using MediatR;
+using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using OficinaMecanica.Application.Contracts.Customers;
-using OficinaMecanica.Application.Features.Customers;
+using OficinaMecanica.Application.UseCases.Customers;
 using OficinaMecanica.Domain.Entities;
 
 namespace OficinaMecanica.Api.Controllers;

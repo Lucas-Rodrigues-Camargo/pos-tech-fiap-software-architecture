@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: oficina-config
+  namespace: oficina-mecanica
+data:
+  ASPNETCORE_ENVIRONMENT: Production
+  ASPNETCORE_URLS: http://+:8080
+  Jwt__Issuer: OficinaMecanica
+  Jwt__Audience: OficinaMecanica.Admin
+  Email__Host: sandbox.smtp.mailtrap.io
+  Email__Port: "587"
+  Email__From: no-reply@oficina.local
+  Email__EnableSsl: "true"

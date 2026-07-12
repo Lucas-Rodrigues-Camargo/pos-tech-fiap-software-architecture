@@ -5,7 +5,7 @@ using OficinaMecanica.Application.Abstractions.Repositories;
 using OficinaMecanica.Application.Contracts.Parts;
 using OficinaMecanica.Domain.Entities;
 
-namespace OficinaMecanica.Application.Features.Parts;
+namespace OficinaMecanica.Application.UseCases.Parts;
 
 public sealed record GetAllPartsQuery : IRequest<IReadOnlyCollection<Part>>;
 public sealed record GetPartByIdQuery(Guid Id) : IRequest<Part?>;
@@ -47,7 +47,7 @@ public sealed class GetPartByIdQueryHandler(IPartRepository repository) : IReque
         => await repository.GetByIdAsync(request.Id, cancellationToken);
 }
 
-public sealed class CreatePartCommandHandler(IPartRepository repository, IOficinaDbContext context) : IRequestHandler<CreatePartCommand, Part>
+public sealed class CreatePartCommandHandler(IPartRepository repository, IUnitOfWork context) : IRequestHandler<CreatePartCommand, Part>
 {
     public async Task<Part> Handle(CreatePartCommand request, CancellationToken cancellationToken)
     {
@@ -64,7 +64,7 @@ public sealed class CreatePartCommandHandler(IPartRepository repository, IOficin
     }
 }
 
-public sealed class UpdatePartCommandHandler(IPartRepository repository, IOficinaDbContext context) : IRequestHandler<UpdatePartCommand, Part?>
+public sealed class UpdatePartCommandHandler(IPartRepository repository, IUnitOfWork context) : IRequestHandler<UpdatePartCommand, Part?>
 {
     public async Task<Part?> Handle(UpdatePartCommand request, CancellationToken cancellationToken)
     {
@@ -87,7 +87,7 @@ public sealed class UpdatePartCommandHandler(IPartRepository repository, IOficin
     }
 }
 
-public sealed class DeletePartCommandHandler(IPartRepository repository, IOficinaDbContext context) : IRequestHandler<DeletePartCommand, bool>
+public sealed class DeletePartCommandHandler(IPartRepository repository, IUnitOfWork context) : IRequestHandler<DeletePartCommand, bool>
 {
     public async Task<bool> Handle(DeletePartCommand request, CancellationToken cancellationToken)
     {

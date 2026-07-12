@@ -6,7 +6,7 @@ using OficinaMecanica.Application.Common;
 using OficinaMecanica.Application.Contracts.Vehicles;
 using OficinaMecanica.Domain.Entities;
 
-namespace OficinaMecanica.Application.Features.Vehicles;
+namespace OficinaMecanica.Application.UseCases.Vehicles;
 
 public sealed record GetAllVehiclesQuery : IRequest<IReadOnlyCollection<VehicleResponse>>;
 public sealed record GetVehicleByIdQuery(Guid Id) : IRequest<VehicleResponse?>;
@@ -55,7 +55,7 @@ public sealed class GetVehicleByIdQueryHandler(IVehicleRepository repository)
             : null;
 }
 
-public sealed class CreateVehicleCommandHandler(IVehicleRepository repository, ICustomerRepository customerRepository, IOficinaDbContext context)
+public sealed class CreateVehicleCommandHandler(IVehicleRepository repository, ICustomerRepository customerRepository, IUnitOfWork context)
     : IRequestHandler<CreateVehicleCommand, VehicleResponse>
 {
     public async Task<VehicleResponse> Handle(CreateVehicleCommand request, CancellationToken cancellationToken)
@@ -79,7 +79,7 @@ public sealed class CreateVehicleCommandHandler(IVehicleRepository repository, I
     }
 }
 
-public sealed class UpdateVehicleCommandHandler(IVehicleRepository repository, IOficinaDbContext context)
+public sealed class UpdateVehicleCommandHandler(IVehicleRepository repository, IUnitOfWork context)
     : IRequestHandler<UpdateVehicleCommand, VehicleResponse?>
 {
     public async Task<VehicleResponse?> Handle(UpdateVehicleCommand request, CancellationToken cancellationToken)
@@ -102,7 +102,7 @@ public sealed class UpdateVehicleCommandHandler(IVehicleRepository repository, I
     }
 }
 
-public sealed class DeleteVehicleCommandHandler(IVehicleRepository repository, IOficinaDbContext context)
+public sealed class DeleteVehicleCommandHandler(IVehicleRepository repository, IUnitOfWork context)
     : IRequestHandler<DeleteVehicleCommand, bool>
 {
     public async Task<bool> Handle(DeleteVehicleCommand request, CancellationToken cancellationToken)

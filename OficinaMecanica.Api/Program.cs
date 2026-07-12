@@ -1,34 +1,25 @@
 using System.Text;
 using System.Reflection;
-using FluentValidation;
-using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
 using OficinaMecanica.Api;
 using OficinaMecanica.Api.Auth;
 using OficinaMecanica.Api.Middlewares;
 using OficinaMecanica.Api.Swagger;
-using OficinaMecanica.Application.Behaviors;
+using OficinaMecanica.Application;
 using OficinaMecanica.Infrastructure;
-using OficinaMecanica.Infrastructure.Identity;
 using OficinaMecanica.Infrastructure.Persistence;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddInfrastructure(builder.Configuration);
+builder.Services.AddApplication();
 builder.Services.AddScoped<JwtTokenService>();
-builder.Services.AddMediatR(cfg =>
-{
-    cfg.RegisterServicesFromAssembly(typeof(ValidationBehavior<,>).Assembly);
-    cfg.AddOpenBehavior(typeof(ValidationBehavior<,>));
-});
-builder.Services.AddValidatorsFromAssembly(typeof(ValidationBehavior<,>).Assembly);
 
 builder.Services.AddControllers();
+builder.Services.AddHealthChecks();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddOpenApi();
 builder.Services.AddSwaggerGen(options =>
@@ -105,19 +96,10 @@ app.MapOpenApi();
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 app.UseAuthentication();
 app.UseAuthorization();
+app.MapHealthChecks("/health").AllowAnonymous();
 app.MapControllers();
 
-using (var scope = app.Services.CreateScope())
-{
-    var services = scope.ServiceProvider;
-    var dbContext = services.GetRequiredService<OficinaDbContext>();
-    var userManager = services.GetRequiredService<UserManager<AppUser>>();
-    var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
-    var configuration = services.GetRequiredService<IConfiguration>();
-
-    await dbContext.Database.EnsureCreatedAsync();
-    await SeedData.InitializeAsync(dbContext, userManager, roleManager, configuration);
-}
+await app.Services.InitializeDatabaseAsync();
 
 app.Run();
 

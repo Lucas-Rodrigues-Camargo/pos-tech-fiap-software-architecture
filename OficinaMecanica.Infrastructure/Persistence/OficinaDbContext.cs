@@ -9,7 +9,7 @@ using OficinaMecanica.Infrastructure.Identity;
 namespace OficinaMecanica.Infrastructure.Persistence;
 
 public sealed class OficinaDbContext(DbContextOptions<OficinaDbContext> options)
-    : IdentityDbContext<AppUser>(options), IOficinaDbContext
+    : IdentityDbContext<AppUser>(options), IUnitOfWork
 {
     public DbSet<Customer> Customers => Set<Customer>();
     public DbSet<Vehicle> Vehicles => Set<Vehicle>();

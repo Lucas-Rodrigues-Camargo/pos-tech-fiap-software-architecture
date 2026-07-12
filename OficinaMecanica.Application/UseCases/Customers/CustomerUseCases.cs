@@ -6,7 +6,7 @@ using OficinaMecanica.Application.Common;
 using OficinaMecanica.Application.Contracts.Customers;
 using OficinaMecanica.Domain.Entities;
 
-namespace OficinaMecanica.Application.Features.Customers;
+namespace OficinaMecanica.Application.UseCases.Customers;
 
 public sealed record GetAllCustomersQuery : IRequest<IReadOnlyCollection<Customer>>;
 public sealed record GetCustomerByIdQuery(Guid Id) : IRequest<Customer?>;
@@ -23,7 +23,7 @@ public sealed class CreateCustomerCommandValidator : AbstractValidator<CreateCus
         RuleFor(x => x.Request.Email).NotEmpty().EmailAddress();
         RuleFor(x => x.Request.Document)
             .Must(DocumentValidator.IsValidCpfOrCnpj)
-            .WithMessage("CPF/CNPJ inv·lido.");
+            .WithMessage("CPF/CNPJ inv√°lido.");
     }
 }
 
@@ -37,7 +37,7 @@ public sealed class UpdateCustomerCommandValidator : AbstractValidator<UpdateCus
         RuleFor(x => x.Request.Email).NotEmpty().EmailAddress();
         RuleFor(x => x.Request.Document)
             .Must(DocumentValidator.IsValidCpfOrCnpj)
-            .WithMessage("CPF/CNPJ inv·lido.");
+            .WithMessage("CPF/CNPJ inv√°lido.");
     }
 }
 
@@ -55,7 +55,7 @@ public sealed class GetCustomerByIdQueryHandler(ICustomerRepository repository)
         => await repository.GetByIdAsync(request.Id, cancellationToken);
 }
 
-public sealed class CreateCustomerCommandHandler(ICustomerRepository repository, IOficinaDbContext context)
+public sealed class CreateCustomerCommandHandler(ICustomerRepository repository, IUnitOfWork context)
     : IRequestHandler<CreateCustomerCommand, Customer>
 {
     public async Task<Customer> Handle(CreateCustomerCommand request, CancellationToken cancellationToken)
@@ -64,7 +64,7 @@ public sealed class CreateCustomerCommandHandler(ICustomerRepository repository,
 
         if (await repository.ExistsByDocumentAsync(normalizedDocument, cancellationToken))
         {
-            throw new OficinaMecanica.Application.Common.ValidationException("J· existe cliente cadastrado com este CPF/CNPJ.");
+            throw new OficinaMecanica.Application.Common.ValidationException("J√° existe cliente cadastrado com este CPF/CNPJ.");
         }
 
         var customer = new Customer(request.Request.Name, normalizedDocument, request.Request.Phone, request.Request.Email);
@@ -74,7 +74,7 @@ public sealed class CreateCustomerCommandHandler(ICustomerRepository repository,
     }
 }
 
-public sealed class UpdateCustomerCommandHandler(ICustomerRepository repository, IOficinaDbContext context)
+public sealed class UpdateCustomerCommandHandler(ICustomerRepository repository, IUnitOfWork context)
     : IRequestHandler<UpdateCustomerCommand, Customer?>
 {
     public async Task<Customer?> Handle(UpdateCustomerCommand request, CancellationToken cancellationToken)
@@ -88,7 +88,7 @@ public sealed class UpdateCustomerCommandHandler(ICustomerRepository repository,
         var normalizedDocument = DocumentValidator.Normalize(request.Request.Document);
         if (await repository.ExistsByDocumentExcludingIdAsync(request.Id, normalizedDocument, cancellationToken))
         {
-            throw new OficinaMecanica.Application.Common.ValidationException("J· existe cliente cadastrado com este CPF/CNPJ.");
+            throw new OficinaMecanica.Application.Common.ValidationException("J√° existe cliente cadastrado com este CPF/CNPJ.");
         }
 
         customer.Update(request.Request.Name, normalizedDocument, request.Request.Phone, request.Request.Email);
@@ -97,7 +97,7 @@ public sealed class UpdateCustomerCommandHandler(ICustomerRepository repository,
     }
 }
 
-public sealed class DeleteCustomerCommandHandler(ICustomerRepository repository, IOficinaDbContext context)
+public sealed class DeleteCustomerCommandHandler(ICustomerRepository repository, IUnitOfWork context)
     : IRequestHandler<DeleteCustomerCommand, bool>
 {
     public async Task<bool> Handle(DeleteCustomerCommand request, CancellationToken cancellationToken)

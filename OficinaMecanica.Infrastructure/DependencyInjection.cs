@@ -5,6 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 using OficinaMecanica.Application.Abstractions;
 using OficinaMecanica.Application.Abstractions.Repositories;
 using OficinaMecanica.Infrastructure.Identity;
+using OficinaMecanica.Infrastructure.Notifications;
 using OficinaMecanica.Infrastructure.Persistence;
 using OficinaMecanica.Infrastructure.Persistence.Repositories;
 
@@ -18,7 +19,7 @@ public static class DependencyInjection
             ?? "Host=localhost;Port=5432;Database=oficina_mecanica;Username=postgres;Password=postgres";
 
         services.AddDbContext<OficinaDbContext>(options => options.UseNpgsql(connectionString));
-        services.AddScoped<IOficinaDbContext>(provider => provider.GetRequiredService<OficinaDbContext>());
+        services.AddScoped<IUnitOfWork>(provider => provider.GetRequiredService<OficinaDbContext>());
 
         services.AddIdentity<AppUser, IdentityRole>(options =>
             {
@@ -37,6 +38,8 @@ public static class DependencyInjection
         services.AddScoped<IServiceCatalogRepository, ServiceCatalogRepository>();
         services.AddScoped<IPartRepository, PartRepository>();
         services.AddScoped<IServiceOrderRepository, ServiceOrderRepository>();
+        services.AddScoped<IEmailSender, SmtpEmailSender>();
+        services.AddScoped<DatabaseInitializer>();
 
         return services;
     }

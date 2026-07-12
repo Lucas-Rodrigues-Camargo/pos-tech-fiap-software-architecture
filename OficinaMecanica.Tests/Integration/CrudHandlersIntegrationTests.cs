@@ -3,10 +3,10 @@ using OficinaMecanica.Application.Contracts.Customers;
 using OficinaMecanica.Application.Contracts.Parts;
 using OficinaMecanica.Application.Contracts.Services;
 using OficinaMecanica.Application.Contracts.Vehicles;
-using OficinaMecanica.Application.Features.Customers;
-using OficinaMecanica.Application.Features.Parts;
-using OficinaMecanica.Application.Features.ServicesCatalog;
-using OficinaMecanica.Application.Features.Vehicles;
+using OficinaMecanica.Application.UseCases.Customers;
+using OficinaMecanica.Application.UseCases.Parts;
+using OficinaMecanica.Application.UseCases.ServicesCatalog;
+using OficinaMecanica.Application.UseCases.Vehicles;
 using OficinaMecanica.Domain.Entities;
 using OficinaMecanica.Infrastructure.Persistence.Repositories;
 
@@ -39,7 +39,7 @@ public sealed class CrudHandlersIntegrationTests
         var deleted = await new DeleteCustomerCommandHandler(repository, database.Context).Handle(new DeleteCustomerCommand(customer.Id), CancellationToken.None);
         var missingDelete = await new DeleteCustomerCommandHandler(repository, database.Context).Handle(new DeleteCustomerCommand(Guid.NewGuid()), CancellationToken.None);
 
-        Assert.Contains("JÃ¡ existe cliente", duplicate.Message);
+        Assert.Contains("Já existe cliente", duplicate.Message);
         Assert.NotNull(updated);
         Assert.Equal("Maria Souza", updated!.Name);
         Assert.Single(listed);
@@ -73,6 +73,7 @@ public sealed class CrudHandlersIntegrationTests
         var updatedWithSameSku = await new UpdatePartCommandHandler(repository, database.Context).Handle(
             new UpdatePartCommand(part.Id, new PartRequest("Filtro de ar esportivo", "flt-002", 50m, 8)),
             CancellationToken.None);
+        var skuBeforeFinalUpdate = updatedWithSameSku?.Sku;
 
         var duplicateUpdate = await Assert.ThrowsAsync<ValidationException>(() => new UpdatePartCommandHandler(repository, database.Context).Handle(
             new UpdatePartCommand(part.Id, new PartRequest("Filtro de ar esportivo", otherPart.Sku, 50m, 8)),
@@ -92,9 +93,8 @@ public sealed class CrudHandlersIntegrationTests
         Assert.Contains("SKU", duplicateCreate.Message);
         Assert.Contains("SKU", duplicateUpdate.Message);
         Assert.NotNull(updatedWithoutSku);
-        Assert.Equal("FLT-002", updatedWithoutSku!.Sku);
         Assert.NotNull(updatedWithSameSku);
-        Assert.Equal("FLT-002", updatedWithSameSku!.Sku);
+        Assert.Equal("FLT-002", skuBeforeFinalUpdate);
         Assert.NotNull(updated);
         Assert.Equal("FLT-003", updated!.Sku);
         Assert.Equal(2, all.Count);

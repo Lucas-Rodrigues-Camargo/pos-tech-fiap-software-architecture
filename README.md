@@ -1,5 +1,7 @@
 # Oficina Mecanica API
 
+> Fase 2: evolução do MVP com Clean Architecture, automação de CI/CD, Kubernetes, escalabilidade horizontal e infraestrutura como código.
+
 MVP em C# para o Tech Challenge da oficina mecanica. A solucao usa um monolito em camadas com foco em ordens de servico, clientes, veiculos, catalogo de servicos, pecas, estoque, autenticacao e metricas operacionais.
 
 ## Time
@@ -521,3 +523,115 @@ Aprovado! - Com falha: 0, Aprovado: 38, Total: 38
 11. Consultar metricas gerais ou por id.
 12. Consultar a OS pelo endpoint publico.
 13. Rodar a analise no SonarQube para verificar vulnerabilidades e qualidade.
+## Arquitetura e infraestrutura da Fase 2
+
+### Clean Architecture
+
+A solução aplica dependências estritas: `Domain` não referencia outros projetos; `Application` referencia apenas `Domain` e bibliotecas de casos de uso; `Infrastructure` implementa os ports de persistência e notificação definidos por `Application`; `Api` atua como interface HTTP e composition root. Testes de arquitetura impedem referências inversas e o acoplamento de `Application` ao Entity Framework.
+
+- `Domain`: entidades e regras de negócio da oficina.
+- `Application`: casos de uso, validações, contratos, repositories ports, e-mail port e `IUnitOfWork` neutro de framework.
+- `Infrastructure`: Entity Framework, PostgreSQL, Identity, repositories, SMTP e inicialização do banco.
+- `Api`: controllers, autenticação HTTP, Swagger, health checks e middleware global.
+
+```mermaid
+flowchart LR
+    API[API / Interface Adapters] --> APP[Application / Use Cases]
+    INFRA[Infrastructure / Adapters] --> APP
+    APP --> DOMAIN[Domain / Enterprise Rules]
+```
+
+A aplicação preserva a separação entre `Domain`, `Application`, `Infrastructure` e `Api`. O Terraform provisiona a infraestrutura em `us-east-1`: VPC, EKS, ECR e RDS PostgreSQL. A API inicia com duas réplicas e o HPA pode escalar até dez pods conforme CPU e memória.
+
+```mermaid
+flowchart LR
+    DEV[Push no GitHub] --> CI[GitHub Actions]
+    CI --> TEST[Build e testes]
+    TEST --> ECR[Imagem no Amazon ECR]
+    ECR --> EKS[Amazon EKS]
+    INTERNET[Internet] --> ELB[Load Balancer AWS]
+    ELB --> API[API 2-10 pods]
+    EKS --> API
+    API --> RDS[(RDS PostgreSQL privado)]
+    API --> SMTP[Mailtrap SMTP]
+    HPA[HPA CPU e memória] --> API
+    TF[Terraform] --> VPC[VPC e sub-redes]
+    TF --> EKS
+    TF --> ECR
+    TF --> RDS
+```
+
+Recursos provisionados:
+
+- VPC `10.0.0.0/16`, duas sub-redes públicas para o EKS e duas sub-redes de banco.
+- EKS com dois workers `t3.small` elegíveis ao Free Tier desta conta, endpoint público e Metrics Server gerenciado como add-on.
+- RDS PostgreSQL 16 `db.t3.micro`, criptografado e sem acesso público.
+- ECR com scan de imagens e retenção das dez imagens mais recentes.
+- Load Balancer público criado pelo `Service` Kubernetes.
+- HPA entre 2 e 10 pods, com metas de 60% de CPU e 75% de memória.
+
+## Execução local com Docker Compose
+
+Requisitos: Docker Desktop e .NET 10 SDK (o SDK é opcional para execução apenas por contêiner).
+
+```bash
+docker compose up --build
+```
+
+A API fica em `http://localhost:8080` e o Swagger em `http://localhost:8080/swagger`. O SonarQube fica em `http://localhost:9000`.
+
+## Provisionamento da AWS com Terraform
+
+Requisitos: conta AWS, AWS CLI, Terraform e `kubectl`. Configure uma identidade AWS com permissões para VPC, EC2, IAM, EKS, ECR e RDS.
+
+```powershell
+aws configure
+cd infra
+Copy-Item terraform.tfvars.example terraform.tfvars
+terraform init
+terraform fmt -check
+terraform validate
+terraform plan
+terraform apply
+```
+
+Edite `terraform.tfvars` antes do `apply`; ele contém a senha do banco e não é versionado. A criação do EKS e RDS pode levar vários minutos. Depois, configure o acesso:
+
+```powershell
+aws eks update-kubeconfig --region us-east-1 --name oficina-mecanica-eks
+kubectl get nodes
+```
+
+Para evitar cobranças quando não estiver usando:
+
+```powershell
+cd infra
+terraform destroy
+```
+
+## CI/CD com GitHub Actions, ECR e EKS
+
+O job `build-and-test` compila e testa a solução. Em pushes para `main`, `publish-and-deploy` publica no ECR, consulta o endpoint do RDS, aplica Secrets e manifestos no EKS e aguarda o rollout. Não é necessário runner `self-hosted`.
+
+No repositório GitHub, configure os seguintes Actions Secrets:
+
+- `AWS_ACCESS_KEY_ID`
+- `AWS_SECRET_ACCESS_KEY`
+- `POSTGRES_PASSWORD`
+- `JWT_KEY` com pelo menos 32 caracteres
+- `SMTP_USERNAME`
+- `SMTP_PASSWORD`
+
+Use em `POSTGRES_PASSWORD` exatamente o mesmo valor aplicado em `database_password` pelo Terraform. Após o deploy, obtenha o endereço público com `kubectl get service oficina-api -n oficina-mecanica` e acesse `http://ENDERECO/swagger`.
+
+## Notificações e consulta de status
+
+O endpoint autenticado `POST /api/service-orders/{id}/notifications/email` envia o status atual da OS ao e-mail cadastrado do cliente. Para desenvolvimento, preencha as credenciais do sandbox SMTP do Mailtrap nas variáveis `Email__Username` e `Email__Password`. No Kubernetes elas vêm do Secret.
+
+A consulta pública permanece disponível em `GET /api/service-orders/public/{number}?document={cpfOuCnpj}`. A listagem operacional exclui OS finalizadas, entregues, reprovadas e canceladas, e aplica a prioridade: Em Execução, Aguardando Aprovação, Diagnóstico e Recebida; dentro do mesmo status, as mais antigas aparecem primeiro.
+
+## Collection e demonstração
+
+A collection versionada está em [request-collections/oficina-mecanica-api-requests.postman_collection.json](request-collections/oficina-mecanica-api-requests.postman_collection.json). Importe também o environment da mesma pasta.
+
+Link do vídeo demonstrativo (até 15 minutos): **adicionar após a publicação no YouTube ou Vimeo**.

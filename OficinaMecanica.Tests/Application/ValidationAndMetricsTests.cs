@@ -11,11 +11,11 @@ using OficinaMecanica.Application.Contracts.Parts;
 using OficinaMecanica.Application.Contracts.ServiceOrders;
 using OficinaMecanica.Application.Contracts.Services;
 using OficinaMecanica.Application.Contracts.Vehicles;
-using OficinaMecanica.Application.Features.Customers;
-using OficinaMecanica.Application.Features.Parts;
-using OficinaMecanica.Application.Features.ServiceOrders;
-using OficinaMecanica.Application.Features.ServicesCatalog;
-using OficinaMecanica.Application.Features.Vehicles;
+using OficinaMecanica.Application.UseCases.Customers;
+using OficinaMecanica.Application.UseCases.Parts;
+using OficinaMecanica.Application.UseCases.ServiceOrders;
+using OficinaMecanica.Application.UseCases.ServicesCatalog;
+using OficinaMecanica.Application.UseCases.Vehicles;
 using OficinaMecanica.Domain.Entities;
 using OficinaMecanica.Infrastructure.Persistence.Repositories;
 

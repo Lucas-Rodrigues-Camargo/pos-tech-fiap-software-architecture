@@ -1,7 +1,7 @@
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using OficinaMecanica.Application.Contracts.ServiceOrders;
-using OficinaMecanica.Application.Features.ServiceOrders;
+using OficinaMecanica.Application.UseCases.ServiceOrders;
 using OficinaMecanica.Domain.Entities;
 using OficinaMecanica.Domain.Enums;
 using OficinaMecanica.Infrastructure.Persistence;

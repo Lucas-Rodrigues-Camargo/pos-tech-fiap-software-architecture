@@ -1,0 +1,66 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: oficina-api
+  namespace: oficina-mecanica
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: oficina-api
+  template:
+    metadata:
+      labels:
+        app: oficina-api
+    spec:
+      containers:
+        - name: api
+          image: oficina-mecanica:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8080
+          envFrom:
+            - configMapRef:
+                name: oficina-config
+          env:
+            - name: DATABASE_HOST
+              valueFrom:
+                secretKeyRef: { name: oficina-secrets, key: database-host }
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef: { name: oficina-secrets, key: postgres-password }
+            - name: ConnectionStrings__DefaultConnection
+              value: Host=$(DATABASE_HOST);Port=5432;Database=oficina_mecanica;Username=postgres;Password=$(POSTGRES_PASSWORD);SSL Mode=Require;Trust Server Certificate=true
+            - name: Jwt__Key
+              valueFrom:
+                secretKeyRef: { name: oficina-secrets, key: jwt-key }
+            - name: Email__Username
+              valueFrom:
+                secretKeyRef: { name: oficina-secrets, key: smtp-username }
+            - name: Email__Password
+              valueFrom:
+                secretKeyRef: { name: oficina-secrets, key: smtp-password }
+          readinessProbe:
+            httpGet: { path: /health, port: 8080 }
+            initialDelaySeconds: 15
+            periodSeconds: 10
+          livenessProbe:
+            httpGet: { path: /health, port: 8080 }
+            initialDelaySeconds: 30
+            periodSeconds: 20
+          resources:
+            requests: { cpu: 100m, memory: 128Mi }
+            limits: { cpu: 500m, memory: 512Mi }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: oficina-api
+  namespace: oficina-mecanica
+spec:
+  type: LoadBalancer
+  selector:
+    app: oficina-api
+  ports:
+    - port: 80
+      targetPort: 8080

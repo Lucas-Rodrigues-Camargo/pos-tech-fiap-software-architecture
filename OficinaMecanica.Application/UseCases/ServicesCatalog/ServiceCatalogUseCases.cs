@@ -5,7 +5,7 @@ using OficinaMecanica.Application.Abstractions.Repositories;
 using OficinaMecanica.Application.Contracts.Services;
 using OficinaMecanica.Domain.Entities;
 
-namespace OficinaMecanica.Application.Features.ServicesCatalog;
+namespace OficinaMecanica.Application.UseCases.ServicesCatalog;
 
 public sealed record GetAllServicesQuery : IRequest<IReadOnlyCollection<ServiceCatalogItem>>;
 public sealed record GetServiceByIdQuery(Guid Id) : IRequest<ServiceCatalogItem?>;
@@ -48,7 +48,7 @@ public sealed class GetServiceByIdQueryHandler(IServiceCatalogRepository reposit
         => await repository.GetByIdAsync(request.Id, cancellationToken);
 }
 
-public sealed class CreateServiceCommandHandler(IServiceCatalogRepository repository, IOficinaDbContext context) : IRequestHandler<CreateServiceCommand, ServiceCatalogItem>
+public sealed class CreateServiceCommandHandler(IServiceCatalogRepository repository, IUnitOfWork context) : IRequestHandler<CreateServiceCommand, ServiceCatalogItem>
 {
     public async Task<ServiceCatalogItem> Handle(CreateServiceCommand request, CancellationToken cancellationToken)
     {
@@ -59,7 +59,7 @@ public sealed class CreateServiceCommandHandler(IServiceCatalogRepository reposi
     }
 }
 
-public sealed class UpdateServiceCommandHandler(IServiceCatalogRepository repository, IOficinaDbContext context) : IRequestHandler<UpdateServiceCommand, ServiceCatalogItem?>
+public sealed class UpdateServiceCommandHandler(IServiceCatalogRepository repository, IUnitOfWork context) : IRequestHandler<UpdateServiceCommand, ServiceCatalogItem?>
 {
     public async Task<ServiceCatalogItem?> Handle(UpdateServiceCommand request, CancellationToken cancellationToken)
     {
@@ -75,7 +75,7 @@ public sealed class UpdateServiceCommandHandler(IServiceCatalogRepository reposi
     }
 }
 
-public sealed class DeleteServiceCommandHandler(IServiceCatalogRepository repository, IOficinaDbContext context) : IRequestHandler<DeleteServiceCommand, bool>
+public sealed class DeleteServiceCommandHandler(IServiceCatalogRepository repository, IUnitOfWork context) : IRequestHandler<DeleteServiceCommand, bool>
 {
     public async Task<bool> Handle(DeleteServiceCommand request, CancellationToken cancellationToken)
     {

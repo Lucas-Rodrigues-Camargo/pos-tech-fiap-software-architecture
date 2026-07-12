@@ -1,0 +1,4 @@
+aws_region        = "us-east-1"
+project_name      = "oficina-mecanica"
+database_username = "postgres"
+database_password = "CHANGE_ME_12_CHARS_MINIMUM"

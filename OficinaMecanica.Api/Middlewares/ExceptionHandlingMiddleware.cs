@@ -3,7 +3,7 @@ using OficinaMecanica.Application.Common;
 
 namespace OficinaMecanica.Api.Middlewares;
 
-public sealed class ExceptionHandlingMiddleware(RequestDelegate next)
+public sealed class ExceptionHandlingMiddleware(RequestDelegate next, ILogger<ExceptionHandlingMiddleware>? logger = null)
 {
     public async Task InvokeAsync(HttpContext context)
     {
@@ -18,6 +18,23 @@ public sealed class ExceptionHandlingMiddleware(RequestDelegate next)
         catch (InvalidOperationException exception)
         {
             await WriteAsync(context, HttpStatusCode.BadRequest, exception.Message);
+        }
+        catch (ArgumentException exception)
+        {
+            await WriteAsync(context, HttpStatusCode.BadRequest, exception.Message);
+        }
+        catch (KeyNotFoundException exception)
+        {
+            await WriteAsync(context, HttpStatusCode.NotFound, exception.Message);
+        }
+        catch (UnauthorizedAccessException exception)
+        {
+            await WriteAsync(context, HttpStatusCode.Unauthorized, exception.Message);
+        }
+        catch (Exception exception)
+        {
+            logger?.LogError(exception, "Unhandled request exception");
+            await WriteAsync(context, HttpStatusCode.InternalServerError, "Ocorreu um erro interno.");
         }
     }
 

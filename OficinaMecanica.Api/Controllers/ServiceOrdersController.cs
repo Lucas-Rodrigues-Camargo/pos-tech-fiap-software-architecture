@@ -1,8 +1,8 @@
-﻿using MediatR;
+using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using OficinaMecanica.Application.Contracts.ServiceOrders;
-using OficinaMecanica.Application.Features.ServiceOrders;
+using OficinaMecanica.Application.UseCases.ServiceOrders;
 
 namespace OficinaMecanica.Api.Controllers;
 
@@ -40,6 +40,27 @@ public sealed class ServiceOrdersController(IMediator mediator) : ApiControllerB
         try
         {
             return (await mediator.Send(new GetServiceOrderByIdQuery(id), cancellationToken)) is { } order ? Ok(order) : NotFound();
+        }
+        catch (Exception exception)
+        {
+            return HandleException(exception);
+        }
+    }
+
+    [Authorize]
+    [HttpPost("{id:guid}/notifications/email")]
+    [EndpointSummary("Send the current service order status by email.")]
+    [EndpointDescription("Sends the current status to the email registered for the service order customer using the configured SMTP service.")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> SendStatusEmail(Guid id, CancellationToken cancellationToken)
+    {
+        try
+        {
+            return await mediator.Send(new SendServiceOrderStatusEmailCommand(id), cancellationToken)
+                ? NoContent()
+                : NotFound();
         }
         catch (Exception exception)
         {
