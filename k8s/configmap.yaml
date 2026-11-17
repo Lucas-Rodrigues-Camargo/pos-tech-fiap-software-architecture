@@ -8,6 +8,8 @@ data:
   ASPNETCORE_URLS: http://+:8080
   Jwt__Issuer: OficinaMecanica
   Jwt__Audience: OficinaMecanica.Admin
+  Jwt__CustomerAudience: OficinaMecanica.Customer
+  Notifications__QueueUrl: ""
   Email__Host: sandbox.smtp.mailtrap.io
   Email__Port: "587"
   Email__From: no-reply@oficina.local

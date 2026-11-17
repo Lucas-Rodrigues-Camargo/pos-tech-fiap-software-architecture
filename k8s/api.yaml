@@ -12,6 +12,11 @@ spec:
     metadata:
       labels:
         app: oficina-api
+        tags.datadoghq.com/service: oficina-api
+        tags.datadoghq.com/env: production
+        tags.datadoghq.com/version: "1"
+      annotations:
+        ad.datadoghq.com/api.logs: '[{"source":"csharp","service":"oficina-api"}]'
     spec:
       containers:
         - name: api
@@ -58,7 +63,7 @@ metadata:
   name: oficina-api
   namespace: oficina-mecanica
 spec:
-  type: LoadBalancer
+  type: ClusterIP
   selector:
     app: oficina-api
   ports:

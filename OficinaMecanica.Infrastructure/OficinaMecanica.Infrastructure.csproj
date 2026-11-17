@@ -1,6 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
+    <PackageReference Include="AWSSDK.SQS" Version="4.0.100.13" />
     <ProjectReference Include="..\OficinaMecanica.Application\OficinaMecanica.Application.csproj" />
     <ProjectReference Include="..\OficinaMecanica.Domain\OficinaMecanica.Domain.csproj" />
   </ItemGroup>

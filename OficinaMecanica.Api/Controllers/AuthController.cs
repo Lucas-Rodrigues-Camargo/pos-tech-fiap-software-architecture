@@ -4,6 +4,8 @@ using OficinaMecanica.Api.Auth;
 using OficinaMecanica.Application.Contracts.Auth;
 using OficinaMecanica.Infrastructure.Identity;
 
+using Microsoft.AspNetCore.Authorization;
+
 namespace OficinaMecanica.Api.Controllers;
 
 [ApiController]
@@ -14,6 +16,7 @@ public sealed class AuthController(
     JwtTokenService jwtTokenService) : ApiControllerBase
 {
     [HttpPost("register")]
+    [Authorize(Roles = "Admin")]
     [EndpointSummary("Register a new API user.")]
     [EndpointDescription("Creates a user account and assigns the Admin or User role based on the isAdmin field.")]
     [ProducesResponseType(StatusCodes.Status201Created)]
@@ -53,6 +56,7 @@ public sealed class AuthController(
     }
 
     [HttpPost("login")]
+    [AllowAnonymous]
     [EndpointSummary("Authenticate a user.")]
     [EndpointDescription("Validates username and password and returns a JWT token for protected endpoints.")]
     [ProducesResponseType(typeof(LoginResponse), StatusCodes.Status200OK)]

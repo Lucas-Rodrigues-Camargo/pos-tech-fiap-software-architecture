@@ -1,3 +1,4 @@
+using Amazon.SQS;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -40,6 +41,18 @@ public static class DependencyInjection
         services.AddScoped<IServiceOrderRepository, ServiceOrderRepository>();
         services.AddScoped<IEmailSender, SmtpEmailSender>();
         services.AddScoped<DatabaseInitializer>();
+
+        var notificationQueueUrl = configuration["Notifications:QueueUrl"];
+        if (!string.IsNullOrWhiteSpace(notificationQueueUrl))
+        {
+            services.AddSingleton<IAmazonSQS, AmazonSQSClient>();
+            services.AddSingleton(provider => new OutboxDispatcher(
+                provider.GetRequiredService<IServiceScopeFactory>(),
+                provider.GetRequiredService<IAmazonSQS>(),
+                notificationQueueUrl,
+                provider.GetRequiredService<Microsoft.Extensions.Logging.ILogger<OutboxDispatcher>>()));
+            services.AddHostedService(provider => provider.GetRequiredService<OutboxDispatcher>());
+        }
 
         return services;
     }

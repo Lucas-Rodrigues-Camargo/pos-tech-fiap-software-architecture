@@ -1,10 +1,27 @@
 # Oficina Mecanica API
 
+> Fase 3: este é o repositório da **aplicação principal**. As funções serverless e as infraestruturas de Kubernetes e banco foram separadas em três pastas irmãs, prontas para receber seus repositórios Git. Veja [a arquitetura da Fase 3](documents/phase-3-architecture.md).
+
+Para simplificar a entrega acadêmica, foi adotado um único ambiente (produção), com deploy automático após merge em `main`.
+
+## Integração da Fase 3
+
+- Funcionários autenticam em `/api/auth/login`; somente `Admin` cria novas contas internas.
+- Clientes autenticam por CPF na Lambda e recebem audience `OficinaMecanica.Customer`, role `Customer` e claim `cpf`.
+- Consultas, criação e aprovação feitas por cliente validam que o CPF do token pertence à OS.
+- Mudanças de status geram eventos transacionais em `tb_outbox_messages`; o dispatcher publica no SQS configurado em `Notifications__QueueUrl`.
+- O NGINX Ingress em `k8s/ingress.yaml` funciona como API Gateway e o HPA usa o metrics-server do EKS.
+- Logs são JSON e aceitam/retornam `X-Correlation-ID`.
+
+Os artefatos arquiteturais estão em `documents/phase-3-architecture.md`, `documents/adr` e `documents/rfc`. As URLs dos quatro repositórios e dos deploys serão incluídas quando os remotos forem criados.
+
 > Fase 2: evolução do MVP com Clean Architecture, automação de CI/CD, Kubernetes, escalabilidade horizontal e infraestrutura como código.
 
 MVP em C# para o Tech Challenge da oficina mecanica. A solucao usa um monolito em camadas com foco em ordens de servico, clientes, veiculos, catalogo de servicos, pecas, estoque, autenticacao e metricas operacionais.
 
 ## Time
+
+> Fase 4: os três microsserviços estão nas pastas independentes `pos-tech-fiap-software-architecture-{os,billing,execution}-service`. Veja [arquitetura e operação](documents/phase-4-implementation.md), [testes BDD](phase4-e2e/README.md) e [documentação PDF](documents/fase-4-arquitetura.pdf).
 
 - Lucas Rodrigues Camargo (rm367435)
 - Graziella Garcia Camargo (rm367436)

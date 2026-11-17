@@ -76,3 +76,9 @@ infra/*.tfstate
 infra/*.tfstate.*
 infra/terraform.tfvars
 k8s/secret.yaml
+
+# Independent Phase 4 repositories hosted inside this workspace.
+/pos-tech-fiap-software-architecture-os-service/
+/pos-tech-fiap-software-architecture-billing-service/
+/pos-tech-fiap-software-architecture-execution-service/
+.pytest_cache/

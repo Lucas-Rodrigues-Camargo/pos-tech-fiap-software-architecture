@@ -15,7 +15,14 @@ public sealed class DatabaseInitializer(
 {
     public async Task InitializeAsync(CancellationToken cancellationToken = default)
     {
-        await context.Database.EnsureCreatedAsync(cancellationToken);
+        if (context.Database.ProviderName?.Contains("Npgsql", StringComparison.OrdinalIgnoreCase) == true)
+        {
+            await context.Database.MigrateAsync(cancellationToken);
+        }
+        else
+        {
+            await context.Database.EnsureCreatedAsync(cancellationToken);
+        }
         await SeedIdentityAsync();
         await SeedDomainAsync(cancellationToken);
     }

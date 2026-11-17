@@ -7,7 +7,7 @@ using OficinaMecanica.Application.UseCases.Vehicles;
 namespace OficinaMecanica.Api.Controllers;
 
 [ApiController]
-[Authorize]
+[Authorize(Policy = "Employee")]
 [Route("api/vehicles")]
 public sealed class VehiclesController(IMediator mediator) : ApiControllerBase
 {

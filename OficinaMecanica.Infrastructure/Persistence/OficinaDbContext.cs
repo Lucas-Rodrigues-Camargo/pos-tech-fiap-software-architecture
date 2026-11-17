@@ -1,4 +1,6 @@
 using System.Text;
+using System.Text.Json;
+using System.Diagnostics;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
@@ -16,6 +18,7 @@ public sealed class OficinaDbContext(DbContextOptions<OficinaDbContext> options)
     public DbSet<ServiceCatalogItem> ServicesCatalog => Set<ServiceCatalogItem>();
     public DbSet<Part> Parts => Set<Part>();
     public DbSet<ServiceOrder> ServiceOrders => Set<ServiceOrder>();
+    public DbSet<OutboxMessage> OutboxMessages => Set<OutboxMessage>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -39,6 +42,7 @@ public sealed class OficinaDbContext(DbContextOptions<OficinaDbContext> options)
             entity.Property(x => x.Document).HasMaxLength(14).IsRequired();
             entity.Property(x => x.Phone).HasMaxLength(20).IsRequired();
             entity.Property(x => x.Email).HasMaxLength(120).IsRequired();
+            entity.Property(x => x.IsActive).HasDefaultValue(true).IsRequired();
         });
 
         modelBuilder.Entity<Vehicle>(entity =>
@@ -116,7 +120,71 @@ public sealed class OficinaDbContext(DbContextOptions<OficinaDbContext> options)
             entity.Property(x => x.AdditionalRequestId).IsRequired(false);
         });
 
+        modelBuilder.Entity<OutboxMessage>(entity =>
+        {
+            entity.ToTable("tb_outbox_messages");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.Id).ValueGeneratedNever();
+            entity.Property(x => x.Type).HasMaxLength(120).IsRequired();
+            entity.Property(x => x.Payload).HasColumnType("text").IsRequired();
+            entity.Property(x => x.CorrelationId).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.LastError).HasMaxLength(1000);
+            entity.HasIndex(x => new { x.ProcessedAtUtc, x.CreatedAtUtc });
+        });
+
         UseSnakeCaseColumnNames(modelBuilder);
+    }
+
+    public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+    {
+        EnqueueServiceOrderEvents();
+        return await base.SaveChangesAsync(cancellationToken);
+    }
+
+    private void EnqueueServiceOrderEvents()
+    {
+        var changedOrders = ChangeTracker.Entries<ServiceOrder>()
+            .Where(entry => entry.State == EntityState.Added
+                || (entry.State == EntityState.Modified && entry.Property(x => x.Status).IsModified))
+            .Select(entry => entry.Entity)
+            .ToList();
+
+        foreach (var order in changedOrders)
+        {
+            var customer = order.Customer ?? ChangeTracker.Entries<Customer>()
+                .Select(entry => entry.Entity)
+                .FirstOrDefault(candidate => candidate.Id == order.CustomerId);
+            if (customer is null) continue;
+
+            var correlationId = Activity.Current?.TraceId.ToString() ?? Guid.NewGuid().ToString("N");
+            var durationHours = GetCurrentStatusDurationHours(order);
+            var payload = JsonSerializer.Serialize(new
+            {
+                eventType = "ServiceOrderStatusChanged",
+                orderId = order.Id,
+                orderNumber = order.Number,
+                status = order.Status.ToString(),
+                customerEmail = customer.Email,
+                durationHours,
+                occurredAtUtc = DateTime.UtcNow,
+                correlationId
+            });
+            OutboxMessages.Add(new OutboxMessage("ServiceOrderStatusChanged", payload, correlationId));
+        }
+    }
+
+    private static double GetCurrentStatusDurationHours(ServiceOrder order)
+    {
+        var startedAt = order.Status switch
+        {
+            Domain.Enums.ServiceOrderStatus.InDiagnosis => order.CreatedAtUtc,
+            Domain.Enums.ServiceOrderStatus.WaitingApproval => order.DiagnosticStartedAtUtc ?? order.CreatedAtUtc,
+            Domain.Enums.ServiceOrderStatus.InExecution => order.BudgetSentAtUtc ?? order.CreatedAtUtc,
+            Domain.Enums.ServiceOrderStatus.Finished => order.ExecutionStartedAtUtc ?? order.CreatedAtUtc,
+            Domain.Enums.ServiceOrderStatus.Delivered => order.FinishedAtUtc ?? order.CreatedAtUtc,
+            _ => order.CreatedAtUtc
+        };
+        return Math.Round((DateTime.UtcNow - startedAt).TotalHours, 4);
     }
 
     private static void UseSnakeCaseColumnNames(ModelBuilder modelBuilder)
