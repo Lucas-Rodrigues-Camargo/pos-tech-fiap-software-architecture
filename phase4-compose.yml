@@ -1,0 +1,18 @@
+services:
+  os-db:
+    image: postgres:16
+    container_name: oficina-phase4-os-db
+    environment: { POSTGRES_DB: os, POSTGRES_PASSWORD: local-os-only }
+    ports: ['5541:5432']
+    healthcheck: { test: ['CMD-SHELL', 'pg_isready -U postgres'], interval: 5s, retries: 20 }
+  billing-db:
+    image: postgres:16
+    container_name: oficina-phase4-billing-db
+    environment: { POSTGRES_DB: billing, POSTGRES_PASSWORD: local-billing-only }
+    ports: ['5542:5432']
+    healthcheck: { test: ['CMD-SHELL', 'pg_isready -U postgres'], interval: 5s, retries: 20 }
+  aws:
+    image: localstack/localstack:4.10
+    container_name: oficina-phase4-aws
+    environment: { SERVICES: 'sqs,dynamodb', AWS_DEFAULT_REGION: us-east-1 }
+    ports: ['4566:4566']
