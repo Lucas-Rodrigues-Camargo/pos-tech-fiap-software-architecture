@@ -14,6 +14,8 @@ env:
   AWS_REGION: us-east-1
   EKS_CLUSTER: oficina-mecanica-eks
   ECR_REPOSITORY: oficina-mecanica
+  SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+  SONAR_HOST_URL: ${{ vars.SONAR_HOST_URL }}
 
 jobs:
   build-and-test:
@@ -25,13 +27,21 @@ jobs:
           dotnet-version: 10.0.x
       - name: Restore
         run: dotnet restore OficinaMecanica.slnx
+      - name: Start SonarQube analysis
+        if: env.SONAR_TOKEN != '' && env.SONAR_HOST_URL != ''
+        run: |
+          dotnet tool install --global dotnet-sonarscanner
+          dotnet sonarscanner begin /k:"oficina-mecanica-api" /d:sonar.host.url="$SONAR_HOST_URL" /d:sonar.token="$SONAR_TOKEN" /d:sonar.cs.opencover.reportsPaths="**/coverage.opencover.xml"
       - name: Build
         run: dotnet build OficinaMecanica.slnx -c Release --no-restore
       - name: Test
-        run: dotnet test OficinaMecanica.slnx -c Release --no-build --collect:"XPlat Code Coverage"
+        run: dotnet test OficinaMecanica.slnx -c Release --no-build --collect:"XPlat Code Coverage" -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=opencover
+      - name: Finish SonarQube analysis
+        if: env.SONAR_TOKEN != '' && env.SONAR_HOST_URL != ''
+        run: dotnet sonarscanner end /d:sonar.token="$SONAR_TOKEN"
 
   publish-and-deploy:
-    if: github.event_name != 'pull_request'
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request' && vars.DEPLOY_ENABLED == 'true' && !contains(github.event.head_commit.message, '[no deploy]')
     needs: build-and-test
     runs-on: ubuntu-latest
     steps:
@@ -49,9 +59,8 @@ jobs:
         env:
           REGISTRY: ${{ steps.ecr.outputs.registry }}
         run: |
-          docker build -t "$REGISTRY/$ECR_REPOSITORY:$GITHUB_SHA" -t "$REGISTRY/$ECR_REPOSITORY:latest" .
+          docker build -t "$REGISTRY/$ECR_REPOSITORY:$GITHUB_SHA" .
           docker push "$REGISTRY/$ECR_REPOSITORY:$GITHUB_SHA"
-          docker push "$REGISTRY/$ECR_REPOSITORY:latest"
       - name: Configure kubectl
         run: aws eks update-kubeconfig --region "$AWS_REGION" --name "$EKS_CLUSTER"
       - name: Apply Kubernetes resources and secrets
@@ -73,10 +82,13 @@ jobs:
           kubectl apply -f k8s/configmap.yaml
           kubectl apply -f k8s/api.yaml
           kubectl apply -f k8s/hpa.yaml
+          kubectl apply -f k8s/ingress.yaml
       - name: Deploy image and wait for rollout
         env:
           REGISTRY: ${{ steps.ecr.outputs.registry }}
         run: |
+          QUEUE_URL=$(aws cloudformation describe-stacks --stack-name oficina-notifications --query "Stacks[0].Outputs[?OutputKey=='NotificationQueueUrl'].OutputValue" --output text)
+          kubectl -n oficina-mecanica set env deployment/oficina-api Notifications__QueueUrl="$QUEUE_URL"
           kubectl -n oficina-mecanica set image deployment/oficina-api api="$REGISTRY/$ECR_REPOSITORY:$GITHUB_SHA"
           kubectl -n oficina-mecanica rollout status deployment/oficina-api --timeout=300s
           kubectl -n oficina-mecanica get service oficina-api

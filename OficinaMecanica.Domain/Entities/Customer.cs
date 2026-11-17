@@ -17,6 +17,7 @@ public sealed class Customer : Entity
     public string Document { get; private set; } = string.Empty;
     public string Phone { get; private set; } = string.Empty;
     public string Email { get; private set; } = string.Empty;
+    public bool IsActive { get; private set; } = true;
 
     public ICollection<Vehicle> Vehicles { get; private set; } = new List<Vehicle>();
 
@@ -27,4 +28,8 @@ public sealed class Customer : Entity
         Phone = phone.Trim();
         Email = email.Trim();
     }
+
+    public void Deactivate() => IsActive = false;
+
+    public void Activate() => IsActive = true;
 }

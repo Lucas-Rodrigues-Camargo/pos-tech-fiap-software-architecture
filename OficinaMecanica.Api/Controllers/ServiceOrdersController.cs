@@ -10,7 +10,7 @@ namespace OficinaMecanica.Api.Controllers;
 [Route("api/service-orders")]
 public sealed class ServiceOrdersController(IMediator mediator) : ApiControllerBase
 {
-    [Authorize]
+    [Authorize(Policy = "Employee")]
     [HttpGet]
     [EndpointSummary("List all service orders.")]
     [EndpointDescription("Returns service orders with customer, vehicle, services, parts, and current status.")]
@@ -28,7 +28,7 @@ public sealed class ServiceOrdersController(IMediator mediator) : ApiControllerB
         }
     }
 
-    [Authorize]
+    [Authorize(Roles = "Admin,User,Customer")]
     [HttpGet("{id:guid}")]
     [EndpointSummary("Get a service order by id.")]
     [EndpointDescription("Returns full service order details when the provided id exists.")]
@@ -39,7 +39,9 @@ public sealed class ServiceOrdersController(IMediator mediator) : ApiControllerB
     {
         try
         {
-            return (await mediator.Send(new GetServiceOrderByIdQuery(id), cancellationToken)) is { } order ? Ok(order) : NotFound();
+            var order = await mediator.Send(new GetServiceOrderByIdQuery(id), cancellationToken);
+            if (order is null) return NotFound();
+            return CanAccessCustomer(order.CustomerDocument) ? Ok(order) : Forbid();
         }
         catch (Exception exception)
         {
@@ -47,7 +49,7 @@ public sealed class ServiceOrdersController(IMediator mediator) : ApiControllerB
         }
     }
 
-    [Authorize]
+    [Authorize(Policy = "Employee")]
     [HttpPost("{id:guid}/notifications/email")]
     [EndpointSummary("Send the current service order status by email.")]
     [EndpointDescription("Sends the current status to the email registered for the service order customer using the configured SMTP service.")]
@@ -68,7 +70,7 @@ public sealed class ServiceOrdersController(IMediator mediator) : ApiControllerB
         }
     }
 
-    [Authorize]
+    [Authorize(Roles = "Admin,User,Customer")]
     [HttpPost]
     [EndpointSummary("Create a received service order.")]
     [EndpointDescription("Creates a service order with customer document, vehicle data, and customer request list. The initial status is Received.")]
@@ -79,6 +81,7 @@ public sealed class ServiceOrdersController(IMediator mediator) : ApiControllerB
     {
         try
         {
+            if (!CanAccessCustomer(request.CustomerDocument)) return Forbid();
             var order = await mediator.Send(new CreateServiceOrderCommand(request), cancellationToken);
             return CreatedAtAction(nameof(GetById), new { id = order.Id }, order);
         }
@@ -88,7 +91,7 @@ public sealed class ServiceOrdersController(IMediator mediator) : ApiControllerB
         }
     }
 
-    [Authorize]
+    [Authorize(Policy = "Employee")]
     [HttpPost("{id:guid}/status")]
     [EndpointSummary("Change the service order operational status.")]
     [EndpointDescription("Receives the enum number and only allows finishing or delivering the service order.")]
@@ -108,7 +111,7 @@ public sealed class ServiceOrdersController(IMediator mediator) : ApiControllerB
         }
     }
 
-    [Authorize]
+    [Authorize(Policy = "Employee")]
     [HttpPatch("{id:guid}/budget")]
     [EndpointSummary("Add a budget to the service order.")]
     [EndpointDescription("Adds services and parts, reserves required stock, and moves the order to WaitingApproval.")]
@@ -128,7 +131,7 @@ public sealed class ServiceOrdersController(IMediator mediator) : ApiControllerB
         }
     }
 
-    [Authorize]
+    [Authorize(Policy = "Employee")]
     [HttpPatch("{id:guid}/budget/additional-items")]
     [EndpointSummary("Add additional budget items to the service order.")]
     [EndpointDescription("Adds additional services and parts, reserves required stock, marks the current additional request, and returns only the new items separated for approval.")]
@@ -148,7 +151,7 @@ public sealed class ServiceOrdersController(IMediator mediator) : ApiControllerB
         }
     }
 
-    [Authorize]
+    [Authorize(Policy = "Employee")]
     [HttpPost("{id:guid}/diagnosis/start")]
     [EndpointSummary("Start service order diagnosis.")]
     [EndpointDescription("Sets diagnosticStartedAtUtc and moves the order to InDiagnosis.")]
@@ -168,7 +171,7 @@ public sealed class ServiceOrdersController(IMediator mediator) : ApiControllerB
         }
     }
 
-    [Authorize]
+    [Authorize(Policy = "Customer")]
     [HttpPost("{id:guid}/approval")]
     [EndpointSummary("Approve or reject the service order budget.")]
     [EndpointDescription("When approved, moves to InExecution. When rejected, moves to Reproved and returns reserved parts to stock.")]
@@ -180,6 +183,9 @@ public sealed class ServiceOrdersController(IMediator mediator) : ApiControllerB
     {
         try
         {
+            var existing = await mediator.Send(new GetServiceOrderByIdQuery(id), cancellationToken);
+            if (existing is null) return NotFound();
+            if (!CanAccessCustomer(existing.CustomerDocument)) return Forbid();
             return (await mediator.Send(new DecideServiceOrderApprovalCommand(id, request), cancellationToken)) is { } order ? Ok(order) : NotFound();
         }
         catch (Exception exception)
@@ -188,7 +194,7 @@ public sealed class ServiceOrdersController(IMediator mediator) : ApiControllerB
         }
     }
 
-    [Authorize]
+    [Authorize(Policy = "Employee")]
     [HttpPost("{id:guid}/cancel")]
     [EndpointSummary("Cancel a service order.")]
     [EndpointDescription("Cancels orders in Received, InDiagnosis, or WaitingApproval. It does not allow canceling InExecution, Finished, Delivered, or Reproved.")]
@@ -208,7 +214,7 @@ public sealed class ServiceOrdersController(IMediator mediator) : ApiControllerB
         }
     }
 
-    [Authorize]
+    [Authorize(Policy = "Employee")]
     [HttpGet("metrics/execution-time")]
     [EndpointSummary("Get general execution time metrics.")]
     [EndpointDescription("Returns the number of finished orders and the average execution time in hours.")]
@@ -226,7 +232,7 @@ public sealed class ServiceOrdersController(IMediator mediator) : ApiControllerB
         }
     }
 
-    [Authorize]
+    [Authorize(Policy = "Employee")]
     [HttpGet("{id:guid}/metrics/execution-time")]
     [EndpointSummary("Get execution time metrics by service order.")]
     [EndpointDescription("Returns total elapsed time and the elapsed time between each step for the provided service order.")]
@@ -245,10 +251,10 @@ public sealed class ServiceOrdersController(IMediator mediator) : ApiControllerB
         }
     }
 
-    [AllowAnonymous]
+    [Authorize(Roles = "Admin,User,Customer")]
     [HttpGet("public/{number}")]
-    [EndpointSummary("Get public service order status.")]
-    [EndpointDescription("Allows querying a service order by number and customer document without authentication.")]
+    [EndpointSummary("Get service order status by number.")]
+    [EndpointDescription("Employees may query any order; customers may only query their own document.")]
     [ProducesResponseType(typeof(ServiceOrderResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -256,12 +262,24 @@ public sealed class ServiceOrdersController(IMediator mediator) : ApiControllerB
     {
         try
         {
+            if (!CanAccessCustomer(document)) return Forbid();
             return (await mediator.Send(new GetPublicServiceOrderQuery(number, document), cancellationToken)) is { } order ? Ok(order) : NotFound();
         }
         catch (Exception exception)
         {
             return HandleException(exception);
         }
+    }
+
+    private bool CanAccessCustomer(string document)
+    {
+        // Attribute authorization is exercised by ASP.NET; direct controller unit tests
+        // do not have an HttpContext and therefore bypass only this ownership branch.
+        if (User?.Identity?.IsAuthenticated != true || !User.IsInRole("Customer")) return true;
+        var tokenCpf = User.FindFirst("cpf")?.Value;
+        return !string.IsNullOrWhiteSpace(tokenCpf)
+            && OficinaMecanica.Application.Common.DocumentValidator.Normalize(tokenCpf)
+                == OficinaMecanica.Application.Common.DocumentValidator.Normalize(document);
     }
 }
 

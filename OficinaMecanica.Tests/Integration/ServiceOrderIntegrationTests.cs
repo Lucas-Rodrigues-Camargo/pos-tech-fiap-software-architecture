@@ -347,6 +347,7 @@ public sealed class ServiceOrderIntegrationTests
         Assert.NotNull(delivered);
         Assert.Equal(ServiceOrderStatus.Delivered, delivered!.Status);
         Assert.Null(missingStatus);
+        Assert.True(await database.Context.OutboxMessages.CountAsync() >= 3);
     }
 
     [Fact]

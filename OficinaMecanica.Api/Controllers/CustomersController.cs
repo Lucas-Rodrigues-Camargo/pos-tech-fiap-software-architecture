@@ -8,7 +8,7 @@ using OficinaMecanica.Domain.Entities;
 namespace OficinaMecanica.Api.Controllers;
 
 [ApiController]
-[Authorize]
+[Authorize(Policy = "Employee")]
 [Route("api/customers")]
 public sealed class CustomersController(IMediator mediator) : ApiControllerBase
 {

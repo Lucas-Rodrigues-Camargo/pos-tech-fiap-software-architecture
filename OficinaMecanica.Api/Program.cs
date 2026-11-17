@@ -14,6 +14,9 @@ using OficinaMecanica.Infrastructure.Persistence;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Logging.ClearProviders();
+builder.Logging.AddJsonConsole();
+
 builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddApplication();
 builder.Services.AddScoped<JwtTokenService>();
@@ -60,10 +63,12 @@ var jwtSection = builder.Configuration.GetSection("Jwt");
 var jwtKey = jwtSection["Key"] ?? "super-secret-key-for-dev-only-2026";
 var jwtIssuer = jwtSection["Issuer"] ?? "OficinaMecanica";
 var jwtAudience = jwtSection["Audience"] ?? "OficinaMecanica.Admin";
+var customerJwtAudience = jwtSection["CustomerAudience"] ?? "OficinaMecanica.Customer";
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
+        options.MapInboundClaims = false;
         options.TokenValidationParameters = new TokenValidationParameters
         {
             ValidateIssuer = true,
@@ -71,7 +76,8 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidateLifetime = true,
             ValidateIssuerSigningKey = true,
             ValidIssuer = jwtIssuer,
-            ValidAudience = jwtAudience,
+            ValidAudiences = [jwtAudience, customerJwtAudience],
+            RoleClaimType = "role",
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey))
         };
     });
@@ -81,6 +87,8 @@ builder.Services.AddAuthorization(options =>
     options.DefaultPolicy = new AuthorizationPolicyBuilder(JwtBearerDefaults.AuthenticationScheme)
         .RequireAuthenticatedUser()
         .Build();
+    options.AddPolicy("Employee", policy => policy.RequireRole("Admin", "User"));
+    options.AddPolicy("Customer", policy => policy.RequireRole("Customer"));
 });
 
 var app = builder.Build();
@@ -93,6 +101,7 @@ app.UseSwaggerUI(options =>
     options.DisplayRequestDuration();
 });
 app.MapOpenApi();
+app.UseMiddleware<CorrelationIdMiddleware>();
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 app.UseAuthentication();
 app.UseAuthorization();

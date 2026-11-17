@@ -21,7 +21,7 @@ public sealed class JwtTokenService(IConfiguration configuration)
             new(ClaimTypes.Name, username)
         };
 
-        claims.AddRange(roles.Select(role => new Claim(ClaimTypes.Role, role)));
+        claims.AddRange(roles.Select(role => new Claim("role", role)));
 
         var credentials = new SigningCredentials(
             new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key)),

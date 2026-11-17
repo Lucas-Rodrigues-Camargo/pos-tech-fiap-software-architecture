@@ -1,3 +1,5 @@
+using System.Security.Claims;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using OficinaMecanica.Api.Controllers;
 using OficinaMecanica.Application.Contracts.ServiceOrders;
@@ -62,6 +64,37 @@ public sealed class ServiceOrdersControllerTests
         Assert.IsType<NotFoundResult>(await controller.Cancel(id, CancellationToken.None));
         Assert.IsType<NotFoundResult>(await controller.GetMetricsById(id, CancellationToken.None));
         Assert.IsType<NotFoundResult>(await controller.GetPublicStatus("OS-1", "52998224725", CancellationToken.None));
+    }
+
+    [Fact]
+    public async Task ClienteNaoDeveAcessarOrdemDeOutroCpf()
+    {
+        var id = Guid.NewGuid();
+        var controller = new ServiceOrdersController(new FakeMediator(request => request switch
+        {
+            GetServiceOrderByIdQuery => Response(id, ServiceOrderStatus.WaitingApproval),
+            _ => null
+        }))
+        {
+            ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext
+                {
+                    User = new ClaimsPrincipal(new ClaimsIdentity(
+                    [
+                        new Claim(ClaimTypes.NameIdentifier, "customer-id"),
+                        new Claim(ClaimTypes.Role, "Customer"),
+                        new Claim("cpf", "11144477735")
+                    ], "Test"))
+                }
+            }
+        };
+
+        Assert.IsType<ForbidResult>(await controller.GetById(id, CancellationToken.None));
+        Assert.IsType<ForbidResult>(await controller.DecideApproval(
+            id,
+            new ApprovalDecisionRequest(Guid.NewGuid(), true),
+            CancellationToken.None));
     }
 
     private static ServiceOrderResponse Response(Guid id, ServiceOrderStatus status)
