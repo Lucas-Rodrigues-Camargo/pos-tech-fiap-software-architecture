@@ -1,4 +1,6 @@
 from pathlib import Path
+import json
+from reportlab.graphics.shapes import Drawing, Rect, String, Line, Polygon
 from reportlab.lib import colors
 from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.lib.units import cm
@@ -8,6 +10,10 @@ from xml.sax.saxutils import escape
 ROOT = Path(__file__).resolve().parents[2]
 OUTPUT = ROOT / "documents" / "fase-4-arquitetura.pdf"
 styles = getSampleStyleSheet()
+evidence = {
+    slug: json.loads((ROOT / f"pos-tech-fiap-software-architecture-{slug}-service/docs/verification.json").read_text(encoding="utf-8"))
+    for slug in ("os", "billing", "execution")
+}
 story = []
 def para(text, style="BodyText"):
     story.append(Paragraph(escape(text), styles[style]))
@@ -23,6 +29,22 @@ for slug, purpose, db in [
     para(purpose + ". " + db + ".")
     para("https://github.com/Lucas-Rodrigues-Camargo/pos-tech-fiap-software-architecture-" + slug + "-service")
 para("Componentes e comunicação", "Heading2")
+diagram = Drawing(470, 230)
+def box(x, y, width, title, detail, fill=colors.aliceblue):
+    diagram.add(Rect(x, y, width, 42, fillColor=fill, strokeColor=colors.steelblue))
+    diagram.add(String(x + width/2, y + 26, title, textAnchor="middle", fontName="Helvetica-Bold", fontSize=10))
+    diagram.add(String(x + width/2, y + 11, detail, textAnchor="middle", fontSize=8))
+def arrow(x1, y1, x2, y2):
+    diagram.add(Line(x1, y1, x2, y2, strokeColor=colors.steelblue))
+    diagram.add(Polygon([x2, y2, x2-3, y2+6, x2+3, y2+6], fillColor=colors.steelblue, strokeColor=colors.steelblue))
+box(155, 180, 160, "SQS + DLQ", "comandos e eventos v1")
+for x, title, database in ((0, "OS / Saga", "PostgreSQL OS"), (165, "Billing", "PostgreSQL Billing"), (330, "Execution", "DynamoDB")):
+    box(x, 100, 140, title, "API JWT + inbox/outbox")
+    arrow(235, 180, x+70, 142)
+    box(x, 20, 140, database, "acesso exclusivo do serviço", colors.honeydew)
+    arrow(x+70, 100, x+70, 62)
+story.append(diagram)
+para("Gateway/autenticação e Datadog são integrações transversais. O ambiente AWS é pré-existente; o deploy da aplicação não executa Terraform apply.")
 rows = [["Entrada", "Processamento", "Persistência"],
     ["JWT / Gateway", "OS Service", "PostgreSQL OS"],
     ["JWT / Gateway", "Billing Service", "PostgreSQL Billing"],
@@ -41,7 +63,7 @@ for text in [
     "2. Funcionário registra diagnóstico e estimativa; OS solicita orçamento ao Billing.",
     "3. Cliente aprova ou rejeita orçamento com JWT de proprietário.",
     "4. Billing cria preferência no Mercado Pago; webhook validado dispara consulta autoritativa do pagamento.",
-    "5. Após pagamento confirmado, OS envia StartRepair e recebe RepairStarted.",
+    "5. Após pagamento confirmado, OS envia AuthorizeRepair. Execution entra em ReadyForRepair; o funcionário inicia /start e publica RepairStarted.",
     "6. Funcionário finaliza; Execution publica RepairFinished; OS fica Finished."]:
     para(text)
 para("Compensação e segurança", "Heading2")
@@ -53,16 +75,16 @@ para("Três contextos independentes: atendimento/OS, financeiro e produção. Sa
 story.append(PageBreak())
 para("Verificação e operação", "Heading1")
 for text in [
-    "23 testes OS, 22 Billing e 19 Execution aprovados. Cobertura: 94,25%, 94,33% e 93,20%, respectivamente.",
+    "Testes e cobertura de linhas: " + "; ".join(f"{slug}: {item['tests']['passed']} aprovados, {item['coverage']['lines']:.2f}%" for slug, item in evidence.items()) + ". Números gerados de TRX/Cobertura.",
     "Código gerado em obj é excluído; domínio, APIs, workflows e adaptadores são incluídos. Gate CI exige pelo menos 80%.",
-    "BDD: dois cenários completos aprovados, com três APIs, PostgreSQL, SQS e DynamoDB em ambiente local. Apenas Mercado Pago usa simulador HTTP.",
+    "BDD: três cenários completos aprovados (sucesso, rejeição e cancelamento pago com estorno), com três APIs, PostgreSQL, SQS e DynamoDB em ambiente local. Apenas Mercado Pago usa simulador HTTP.",
     "Três imagens Docker construídas e três configurações Terraform validadas.",
     "CI independente: build, testes, cobertura, artefatos, Docker e Terraform. SonarQube exige secrets e servidor; deploy EKS exige configuração externa.",
-    "Infra por serviço: SQS/DLQ, ECR, IAM Pod Identity e banco próprio. Backend S3 criptografado, com state separado e lockfile.",
+    "Deploy sobre infraestrutura existente: SQS/DLQ, ECR, IAM Pod Identity e banco próprio. Terraform é uma referência opcional, sem apply no pipeline da aplicação.",
     "Observabilidade: correlationId/orderId, traceparent no envelope, OpenTelemetry OTLP, métricas de transição, dashboard e alerta Datadog."]:
     para(text)
 para("Pendências externas e limites", "Heading2")
-para("Ainda dependem do grupo: provisionamento AWS, domínio/TLS, credenciais Mercado Pago sandbox, SonarQube e Datadog, proteção de main, participantes e vídeo. Esta evidência local não comprova deploy ativo ou pagamento real.")
+para("Ainda dependem do grupo: configuração da infraestrutura AWS existente, domínio/TLS, credenciais Mercado Pago sandbox, SonarQube e Datadog, proteção de main, participantes e vídeo. Esta evidência local não comprova deploy ativo ou pagamento real.")
 para("Inbox/histórico embutidos precisam de arquivamento em alto volume; outbox Dynamo usa scan paginado. Cobranças extras exigem revisão operacional. Migração dos dados anteriores precisa de plano de exportação e reconciliação.")
 para("Referências técnicas", "Heading2")
 para("Mercado Pago: developers/pt/reference/online-payments/checkout-pro-preferences/create-preference/post e developers/pt/reference/online-payments/checkout-pro/create-refund/post.")
