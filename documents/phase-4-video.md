@@ -10,9 +10,9 @@ Participantes: Lucas Rodrigues Camargo (RM367435) e Graziella Garcia Camargo (RM
 
 O MP4 contém narração sintética em português e uma reprodução visual de respostas HTTP capturadas dos três cenários BDD. PostgreSQL e os serviços .NET executam em contêineres; SQS/DynamoDB utilizam LocalStack e Mercado Pago utiliza um simulador HTTP. A seção de entrega e observabilidade explica a configuração versionada. Os testes e a demonstração não provisionam recursos AWS.
 
-O grupo fará o upload manual no YouTube. Sugestão de título: **FIAP — Tech Challenge Fase 4 | Oficina Mecânica | Saga e Microsserviços**. Usar visibilidade **Não listado**, acessível ao avaliador pelo link, e aguardar o processamento de vídeo e áudio antes de compartilhar o endereço.
+Vídeo publicado pelo grupo no YouTube: [Demonstração Tech Challenge Fase 4](https://youtu.be/8DRa4XwfwDo).
 
-O PDF permanece com o campo de vídeo pendente até receber a URL real. Não enviar a versão pendente como entrega definitiva. A descrição das limitações de evidência permanece nos documentos para distinguir implementação, configuração e execução comprovada.
+O PDF de entrega inclui o link publicado do vídeo. A descrição do escopo das evidências permanece nos documentos para distinguir implementação, configuração e execução comprovada.
 
 ## Atualizar o PDF com o link publicado
 
