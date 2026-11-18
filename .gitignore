@@ -82,3 +82,4 @@ k8s/secret.yaml
 /pos-tech-fiap-software-architecture-billing-service/
 /pos-tech-fiap-software-architecture-execution-service/
 .pytest_cache/
+__pycache__/
